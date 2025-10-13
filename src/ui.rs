@@ -134,7 +134,7 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
 
     Paragraph::new(world_state_lines)
         .block(Block::default().title("World State").borders(Borders::ALL))
-
+}
 
 fn create_bar(value: f32, max_value: f32, max_width: usize) -> Line<'static> {
     let percentage = (value / max_value).clamp(0.0, 1.0);

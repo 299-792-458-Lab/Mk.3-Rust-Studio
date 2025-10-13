@@ -5,7 +5,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use crate::simulation::{
-    Behavior, BehaviorState, Identity, Inventory, Position, WorldMetadata, WorldTime,
+    Behavior, BehaviorState, Identity, Inventory, Position, WorldMetadata, WorldMetrics, WorldTime,
 };
 
 fn season_trade_modifier(season: &str) -> f32 {

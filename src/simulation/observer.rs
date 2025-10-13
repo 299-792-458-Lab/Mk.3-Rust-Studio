@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::simulation::{BehaviorState, Biome, Faction, WorldEvent};
+use crate::simulation::{BehaviorState, Biome, Faction, WorldEvent, WorldMetrics};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EntitySnapshot {
