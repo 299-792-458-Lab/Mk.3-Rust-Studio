@@ -189,13 +189,13 @@ impl Default for WorldMetadata {
             (
                 Biome::Forest,
                 BiomeMetadata {
-                    label: "Verdant Veil",
-                    epithet: "Whispers of the canopy",
+                    label: "비단숲 장막",
+                    epithet: "수관이 속삭이는 땅",
                     description:
-                        "Ancient woodland dense with medicinal herbs, hidden shrines, and feral spirits.",
+                        "약초와 숨겨진 성소, 사나운 정령이 공존하는 고대의 숲입니다.",
                     anchor: (6.0, 4.5),
-                    resource_profile: vec!["Herbs", "Timber", "Rare Fauna"],
-                    tensions: vec!["Bandit ambushes", "Explorer expeditions", "Shrine guardians"],
+                    resource_profile: vec!["약초", "목재", "희귀 동물"],
+                    tensions: vec!["산적 매복", "탐험단 원정", "성소 수호령"],
                     behavior_bias: HashMap::from([
                         (Explore, 1.25),
                         (Gather, 1.2),
@@ -212,13 +212,13 @@ impl Default for WorldMetadata {
             (
                 Biome::Plains,
                 BiomeMetadata {
-                    label: "Silverwind Expanse",
-                    epithet: "Caravans under open skies",
+                    label: "은바람 평야",
+                    epithet: "드넓은 하늘 아래 대상 행렬",
                     description:
-                        "Sweeping grasslands supporting caravans, crop rotations, and mounted patrols.",
+                        "대상 행렬과 윤작, 기마 순찰이 끊이지 않는 광활한 초원입니다.",
                     anchor: (1.0, 2.0),
-                    resource_profile: vec!["Grain", "Livestock", "Fiber"],
-                    tensions: vec!["Harvest disputes", "Predator migrations", "Caravan tolls"],
+                    resource_profile: vec!["곡물", "가축", "섬유"],
+                    tensions: vec!["수확 분쟁", "맹수 이동", "대상 통행세"],
                     behavior_bias: HashMap::from([
                         (Trade, 1.2),
                         (Gather, 1.1),
@@ -235,13 +235,13 @@ impl Default for WorldMetadata {
             (
                 Biome::Desert,
                 BiomeMetadata {
-                    label: "Ashen Mirage",
-                    epithet: "Ruins beneath shifting dunes",
+                    label: "잿빛 신기루",
+                    epithet: "모래언덕 아래 잠든 유적",
                     description:
-                        "Arid expanse studded with relic vaults and perilous mirages that test every expedition.",
+                        "고대 유적과 위험한 신기루가 뒤엉킨 사막으로, 모든 원정을 시험합니다.",
                     anchor: (-4.0, -1.5),
-                    resource_profile: vec!["Relics", "Minerals", "Glassroot"],
-                    tensions: vec!["Water scarcity", "Sandstorms", "Relic skirmishes"],
+                    resource_profile: vec!["유물", "광물", "유리뿌리"],
+                    tensions: vec!["물 부족", "모래폭풍", "유물 쟁탈"],
                     behavior_bias: HashMap::from([
                         (Explore, 1.1),
                         (Hunt, 1.25),
@@ -258,13 +258,13 @@ impl Default for WorldMetadata {
             (
                 Biome::Village,
                 BiomeMetadata {
-                    label: "Hearthbound Circuit",
-                    epithet: "Communal heartland",
+                    label: "난롯불 회랑",
+                    epithet: "공동체의 심장부",
                     description:
-                        "Interlinked settlements with workshops, granaries, and Temple clinics.",
+                        "작업장과 곡창, 사원 의원이 촘촘히 연결된 마을의 고리입니다.",
                     anchor: (3.5, -3.0),
-                    resource_profile: vec!["Processed goods", "Craftsmanship", "Faith services"],
-                    tensions: vec!["Civic disputes", "Disease outbreaks", "Supply shortfalls"],
+                    resource_profile: vec!["가공품", "공예 기술", "신앙 의례"],
+                    tensions: vec!["시민 갈등", "질병 확산", "보급 부족"],
                     behavior_bias: HashMap::from([
                         (Trade, 1.1),
                         (Rest, 1.2),
@@ -281,13 +281,13 @@ impl Default for WorldMetadata {
             (
                 Biome::Market,
                 BiomeMetadata {
-                    label: "Golden Conflux",
-                    epithet: "Pulse of commerce",
+                    label: "황금 합류지",
+                    epithet: "상업의 맥박",
                     description:
-                        "Tiered bazaar city where guild councils broker trade, tariffs, and diplomatic truces.",
+                        "길드 평의회가 거래·관세·외교 휴전을 조율하는 층층이 쌓인 시장 도시입니다.",
                     anchor: (0.0, 0.0),
-                    resource_profile: vec!["Currency", "Contracts", "Information"],
-                    tensions: vec!["Tariff wars", "Speculation crashes", "Guild intrigue"],
+                    resource_profile: vec!["화폐", "계약서", "정보"],
+                    tensions: vec!["관세 전쟁", "투기 붕괴", "길드 암투"],
                     behavior_bias: HashMap::from([
                         (Trade, 1.35),
                         (Idle, 0.9),
