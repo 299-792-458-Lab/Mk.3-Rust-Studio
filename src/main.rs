@@ -60,13 +60,13 @@ async fn main() -> anyhow::Result<()> {
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
-    info!("TERA API listening on http://127.0.0.1:8080");
+    info!("TERA API가 http://127.0.0.1:8080 에서 대기 중입니다");
 
     let notify_for_server = shutdown_notify.clone();
     let server_result = axum::serve(listener, router)
         .with_graceful_shutdown(async move {
             if let Err(err) = tokio::signal::ctrl_c().await {
-                warn!("ctrl-c signal listener failed: {err}");
+                warn!("Ctrl-C 신호 수신에 실패했습니다: {err}");
             }
             notify_for_server.notify_waiters();
         })
@@ -85,7 +85,7 @@ async fn world_state_handler(State(state): State<AppState>) -> Json<ObserverSnap
         let guard = state
             .observer
             .read()
-            .expect("observer snapshot lock poisoned");
+            .expect("관찰자 스냅샷 락이 손상되었습니다");
         guard.clone()
     };
     Json(snapshot)
@@ -99,7 +99,7 @@ async fn world_events_handler(
         let guard = state
             .observer
             .read()
-            .expect("observer snapshot lock poisoned");
+            .expect("관찰자 스냅샷 락이 손상되었습니다");
         guard.events.clone()
     };
 

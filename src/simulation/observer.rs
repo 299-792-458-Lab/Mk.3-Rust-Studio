@@ -29,8 +29,8 @@ impl ObserverSnapshot {
     pub fn new() -> Self {
         Self {
             tick: 0,
-            epoch: "Daybreak".to_string(),
-            season: "Bloomrise".to_string(),
+            epoch: "새벽".to_string(),
+            season: "꽃피움 계절".to_string(),
             entities: Vec::new(),
             events: Vec::new(),
         }

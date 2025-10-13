@@ -5,6 +5,7 @@ use bevy_ecs::schedule::Schedule;
 
 pub mod components;
 pub mod events;
+pub mod localization;
 pub mod observer;
 pub mod resources;
 pub mod systems;
@@ -12,6 +13,7 @@ pub mod world;
 
 pub use components::*;
 pub use events::*;
+pub use localization::*;
 pub use observer::*;
 pub use resources::*;
 pub use systems::*;
