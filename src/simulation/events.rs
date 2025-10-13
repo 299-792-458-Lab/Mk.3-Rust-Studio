@@ -127,10 +127,6 @@ impl WorldEventLog {
         self.events.push_back(event);
     }
 
-    pub fn events(&self) -> impl Iterator<Item = &WorldEvent> {
-        self.events.iter()
-    }
-
     pub fn snapshot(&self) -> Vec<WorldEvent> {
         self.events.iter().cloned().collect()
     }
