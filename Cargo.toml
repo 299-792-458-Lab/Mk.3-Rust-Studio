@@ -1,0 +1,6 @@
+[package]
+name = "mk3_rust_studio"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
