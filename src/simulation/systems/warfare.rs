@@ -1,7 +1,7 @@
 // Warfare system
 
 use bevy_ecs::prelude::*;
-use crate::simulation::{AllNationMetrics, Nation, WorldTime, WorldEventLog, WorldMetadata};
+use crate::simulation::{AllNationMetrics, Nation, WorldTime};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
