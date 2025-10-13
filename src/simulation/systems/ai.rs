@@ -78,17 +78,17 @@ fn personality_modifier(personality: &Personality, state: BehaviorState) -> f32 
 
 fn epoch_modifier(segment: &str, state: BehaviorState) -> f32 {
     match segment {
-        "Daybreak" => match state {
+        "새벽" => match state {
             BehaviorState::Explore | BehaviorState::Gather => 1.15,
             BehaviorState::Rest => 0.85,
             _ => 1.0,
         },
-        "Highsun" => match state {
+        "한낮" => match state {
             BehaviorState::Trade => 1.2,
             BehaviorState::Idle => 0.85,
             _ => 1.0,
         },
-        "Nightfall" => match state {
+        "해질녘" => match state {
             BehaviorState::Hunt => 1.25,
             BehaviorState::Rest => 1.1,
             BehaviorState::Trade => 0.75,
@@ -100,17 +100,17 @@ fn epoch_modifier(segment: &str, state: BehaviorState) -> f32 {
 
 fn season_modifier(season: &str, state: BehaviorState) -> f32 {
     match season {
-        "Bloomrise" => match state {
+        "꽃피움 계절" => match state {
             BehaviorState::Gather => 1.2,
             BehaviorState::Trade => 1.05,
             _ => 1.0,
         },
-        "Highflame" => match state {
+        "불꽃 절정" => match state {
             BehaviorState::Explore | BehaviorState::Hunt => 1.1,
             BehaviorState::Rest => 0.95,
             _ => 1.0,
         },
-        "Emberfall" => match state {
+        "잿불 내림" => match state {
             BehaviorState::Rest => 1.25,
             BehaviorState::Trade => 0.9,
             _ => 1.0,

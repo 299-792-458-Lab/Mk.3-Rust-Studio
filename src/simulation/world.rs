@@ -309,13 +309,9 @@ impl Default for WorldMetadata {
             (
                 Faction::MerchantGuild,
                 FactionMetadata {
-                    motto: "Balance the ledgers, steady the realm.",
-                    doctrine: "Trade diplomacy, caravan escorts, and price harmonization.",
-                    influence_vectors: vec![
-                        "Tariff control",
-                        "Supply contracts",
-                        "Credit issuance",
-                    ],
+                    motto: "장부를 맞추고 세상을 안정시킨다.",
+                    doctrine: "거래 외교, 대상 호위, 가격 조정을 핵심으로 삼습니다.",
+                    influence_vectors: vec!["관세 조정", "공급 계약", "신용 발행"],
                     strongholds: vec![Biome::Market, Biome::Plains],
                     behavior_modifiers: HashMap::from([
                         (BehaviorState::Trade, 1.4),
@@ -332,9 +328,9 @@ impl Default for WorldMetadata {
             (
                 Faction::BanditClans,
                 FactionMetadata {
-                    motto: "Take what the world hoards.",
-                    doctrine: "Asymmetric raids, fear tactics, and relic hoarding.",
-                    influence_vectors: vec!["Ambush threat", "Shadow markets", "Smuggler networks"],
+                    motto: "세상이 숨긴 것을 탈취하라.",
+                    doctrine: "비대칭 기습과 공포 전술, 유물 독점으로 영향력을 넓힙니다.",
+                    influence_vectors: vec!["매복 위협", "암시장", "밀수망"],
                     strongholds: vec![Biome::Forest, Biome::Desert],
                     behavior_modifiers: HashMap::from([
                         (BehaviorState::Hunt, 1.45),
@@ -352,13 +348,9 @@ impl Default for WorldMetadata {
             (
                 Faction::ExplorersLeague,
                 FactionMetadata {
-                    motto: "Chart the unknown, claim the unseen.",
-                    doctrine: "Survey missions, anomaly mapping, and relic authentication.",
-                    influence_vectors: vec![
-                        "Discovery rights",
-                        "Cartographic data",
-                        "Artifact appraisal",
-                    ],
+                    motto: "미지를 그리고 보이지 않는 것을 손에 쥔다.",
+                    doctrine: "정찰 임무, 이상 지형 기록, 유물 감정을 수행합니다.",
+                    influence_vectors: vec!["발견권", "지도 정보", "유물 감정"],
                     strongholds: vec![Biome::Forest, Biome::Desert],
                     behavior_modifiers: HashMap::from([
                         (BehaviorState::Explore, 1.5),
@@ -376,13 +368,9 @@ impl Default for WorldMetadata {
             (
                 Faction::SettlersUnion,
                 FactionMetadata {
-                    motto: "Rooted in toil, risen by craft.",
-                    doctrine: "Cooperative labor, agrarian planning, and civic rebuilding.",
-                    influence_vectors: vec![
-                        "Infrastructure projects",
-                        "Harvest yields",
-                        "Community festivals",
-                    ],
+                    motto: "노동에 뿌리내리고 공예로 성장한다.",
+                    doctrine: "협동 노동과 농업 계획, 도시 재건을 주도합니다.",
+                    influence_vectors: vec!["인프라 건설", "수확 관리", "공동체 축제"],
                     strongholds: vec![Biome::Plains, Biome::Village],
                     behavior_modifiers: HashMap::from([
                         (BehaviorState::Gather, 1.35),
@@ -400,13 +388,9 @@ impl Default for WorldMetadata {
             (
                 Faction::TempleOfSuns,
                 FactionMetadata {
-                    motto: "Three suns, one light of accord.",
-                    doctrine: "Peace mediation, relic sanctification, and public welfare.",
-                    influence_vectors: vec![
-                        "Healing rites",
-                        "Pilgrimage networks",
-                        "Moral authority",
-                    ],
+                    motto: "세 개의 태양, 하나의 조화로운 빛.",
+                    doctrine: "평화 중재와 유물 정화, 공공 복지를 맡습니다.",
+                    influence_vectors: vec!["치유 의식", "순례망", "도덕적 권위"],
                     strongholds: vec![Biome::Village, Biome::Market],
                     behavior_modifiers: HashMap::from([
                         (BehaviorState::Rest, 1.4),
@@ -427,29 +411,29 @@ impl Default for WorldMetadata {
 
         let economy = EconomyMetadata {
             circulation_cycle: vec![
-                "Market auctions",
-                "Merchant caravans",
-                "Village services",
-                "Desert expeditions",
-                "Market remittance",
+                "시장 경매",
+                "상단 대상",
+                "마을 서비스",
+                "사막 원정",
+                "시장 환류",
             ],
             stressors: vec![
-                "Drought pressure",
-                "Bandit surges",
-                "Currency debasement",
-                "Relic scarcity",
+                "가뭄 압박",
+                "산적 급습",
+                "화폐 절하",
+                "유물 부족",
             ],
             catalysts: vec![
-                "Temple festivals",
-                "Explorer breakthroughs",
-                "Guild tariff cuts",
-                "Union harvest boons",
+                "사원 축제",
+                "탐험가 돌파구",
+                "길드 관세 인하",
+                "연합 풍년",
             ],
         };
 
         let epochs = EpochCadence {
-            day_segments: vec!["Daybreak", "Highsun", "Nightfall"],
-            seasons: vec!["Bloomrise", "Highflame", "Emberfall"],
+            day_segments: vec!["새벽", "한낮", "해질녘"],
+            seasons: vec!["꽃피움 계절", "불꽃 절정", "잿불 내림"],
         };
 
         Self {

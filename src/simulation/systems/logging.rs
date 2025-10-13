@@ -3,7 +3,38 @@
 use bevy_ecs::prelude::*;
 use tracing::info;
 
-use crate::simulation::{Behavior, Identity, Position, WorldMetadata, WorldTime};
+use crate::simulation::{
+    Behavior, BehaviorState, Biome, Faction, Identity, Position, WorldMetadata, WorldTime,
+};
+
+fn behavior_label(state: BehaviorState) -> &'static str {
+    match state {
+        BehaviorState::Idle => "휴식 대기",
+        BehaviorState::Explore => "탐험",
+        BehaviorState::Gather => "채집",
+        BehaviorState::Trade => "거래",
+        BehaviorState::Hunt => "사냥",
+        BehaviorState::Rest => "회복",
+    }
+}
+
+fn faction_label(faction: Faction) -> &'static str {
+    match faction {
+        Faction::Neutral => "중립 연합",
+        Faction::MerchantGuild => "상인 길드",
+        Faction::BanditClans => "산적 연맹",
+        Faction::ExplorersLeague => "탐험가 연맹",
+        Faction::SettlersUnion => "개척민 연합",
+        Faction::TempleOfSuns => "태양의 성전",
+    }
+}
+
+fn biome_label(meta: &WorldMetadata, biome: Biome) -> String {
+    meta.biomes
+        .get(&biome)
+        .map(|b| b.label.to_string())
+        .unwrap_or_else(|| format!("{biome:?}"))
+}
 
 pub fn logging_system(
     time: Res<WorldTime>,
@@ -18,13 +49,13 @@ pub fn logging_system(
         .circulation_cycle
         .get(catalyst_index % world_meta.economy.circulation_cycle.len())
         .copied()
-        .unwrap_or("Balanced exchange");
+        .unwrap_or("균형 거래");
     let stressor = world_meta
         .economy
         .stressors
         .get(catalyst_index % world_meta.economy.stressors.len())
         .copied()
-        .unwrap_or("Stable outlook");
+        .unwrap_or("안정 국면");
 
     let sample = query
         .iter()
@@ -38,8 +69,8 @@ pub fn logging_system(
                         .resource_profile
                         .first()
                         .copied()
-                        .unwrap_or("General goods");
-                    let tension = b.tensions.first().copied().unwrap_or("Quiet watch");
+                        .unwrap_or("일반 물자");
+                    let tension = b.tensions.first().copied().unwrap_or("고요한 경계");
                     (
                         format!("{} — {}", b.label, b.epithet),
                         resource,
@@ -49,10 +80,10 @@ pub fn logging_system(
                 })
                 .unwrap_or_else(|| {
                     (
-                        "Unknown biome".to_string(),
-                        "Unknown resource",
-                        "Unknown tension",
-                        "No records",
+                        "미확인 생태구역".to_string(),
+                        "미확인 자원",
+                        "미확인 긴장",
+                        "기록 없음",
                     )
                 });
 
@@ -63,24 +94,24 @@ pub fn logging_system(
                         .influence_vectors
                         .first()
                         .copied()
-                        .unwrap_or("Subtle influence");
+                        .unwrap_or("은밀한 영향");
                     let stronghold = f
                         .strongholds
                         .first()
-                        .map(|biome| format!("{biome:?}"))
-                        .unwrap_or_else(|| "No stronghold".to_string());
+                        .map(|biome| biome_label(&world_meta, *biome))
+                        .unwrap_or_else(|| "거점 없음".to_string());
                     format!(
-                        "{} | Doctrine: {} | Lever: {} | Base: {}",
+                        "{} | 교리: {} | 영향 축: {} | 거점: {}",
                         f.motto, f.doctrine, vector, stronghold
                     )
                 })
-                .unwrap_or_else(|| "Unaligned motives".to_string());
+                .unwrap_or_else(|| "분류되지 않은 동기".to_string());
 
             format!(
-                "{} ({:?}) is {:?} within {} | Focus: {} | Tension: {} | Atmosphere: {} | {}",
+                "{} ({}) 는 {} 상태로 {}에 있습니다 | 초점 자원: {} | 긴장 요인: {} | 분위기: {} | {}",
                 identity.name,
-                identity.faction,
-                behavior.state,
+                faction_label(identity.faction),
+                behavior_label(behavior.state),
                 biome_summary,
                 resource_hint,
                 tension_hint,
@@ -88,10 +119,10 @@ pub fn logging_system(
                 faction_thread
             )
         })
-        .unwrap_or_else(|| "No entities present".to_string());
+        .unwrap_or_else(|| "관측 가능한 개체가 없습니다".to_string());
 
     info!(
         tick = time.tick,
-        epoch, season, catalyst, circulation_stage, stressor, sample, "world pulse"
+        epoch, season, catalyst, circulation_stage, stressor, sample, "세계 맥동"
     );
 }
