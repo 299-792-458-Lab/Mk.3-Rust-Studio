@@ -6,6 +6,7 @@ use bevy_ecs::schedule::Schedule;
 pub mod components;
 pub mod events;
 pub mod localization;
+pub mod nation;
 pub mod observer;
 pub mod resources;
 pub mod systems;
@@ -14,6 +15,7 @@ pub mod world;
 pub use components::*;
 pub use events::*;
 pub use localization::*;
+pub use nation::*;
 pub use observer::*;
 pub use resources::*;
 pub use systems::*;
@@ -38,7 +40,7 @@ impl SimulationWorld {
         let mut world = World::default();
         world.insert_resource(config);
         world.insert_resource(WorldTime::default());
-        world.insert_resource(WorldMetrics::default());
+        world.insert_resource(AllNationMetrics::default());
         world.insert_resource(WorldMetadata::default());
         world.insert_resource(WorldEventLog::default());
 
@@ -124,6 +126,7 @@ impl SimulationWorld {
 
 fn seed_entities(world: &mut World) {
     use BehaviorState::*;
+    use Nation::*;
 
     let world_meta = world.resource::<WorldMetadata>().clone();
 
@@ -133,6 +136,7 @@ fn seed_entities(world: &mut World) {
                 id: 1,
                 name: "Calix".to_string(),
                 faction: Faction::MerchantGuild,
+                nation: Tera,
             },
             world_meta.anchor_position(Biome::Market),
             Inventory {
@@ -161,6 +165,7 @@ fn seed_entities(world: &mut World) {
                 id: 2,
                 name: "Rena".to_string(),
                 faction: Faction::BanditClans,
+                nation: Sora,
             },
             world_meta.anchor_position(Biome::Forest),
             Inventory {
@@ -189,6 +194,7 @@ fn seed_entities(world: &mut World) {
                 id: 3,
                 name: "Aria".to_string(),
                 faction: Faction::ExplorersLeague,
+                nation: Aqua,
             },
             world_meta.anchor_position(Biome::Plains),
             Inventory {
@@ -214,6 +220,7 @@ fn seed_entities(world: &mut World) {
                 id: 4,
                 name: "Lys".to_string(),
                 faction: Faction::TempleOfSuns,
+                nation: Tera,
             },
             world_meta.anchor_position(Biome::Village),
             Inventory {

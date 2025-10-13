@@ -3,11 +3,14 @@
 use bevy_ecs::prelude::Component;
 use serde::{Deserialize, Serialize};
 
+use crate::simulation::Nation;
+
 #[derive(Debug, Clone, Component, Serialize, Deserialize)]
 pub struct Identity {
     pub id: u64,
     pub name: String,
     pub faction: Faction,
+    pub nation: Nation,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

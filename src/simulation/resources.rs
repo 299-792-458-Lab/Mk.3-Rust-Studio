@@ -2,22 +2,39 @@
 
 use std::time::Duration;
 
-use bevy_ecs::prelude::Resource;
+use crate::simulation::Nation;
+use bevy_ecs::prelude::{Deref, DerefMut, Resource};
+use std::collections::HashMap;
 
-#[derive(Debug, Resource)]
-pub struct WorldMetrics {
+#[derive(Debug, Clone, Resource)]
+pub struct NationMetrics {
     pub economy: f32,
     pub satisfaction: f32,
     pub security: f32,
+    pub military: f32,
 }
 
-impl Default for WorldMetrics {
+impl Default for NationMetrics {
     fn default() -> Self {
         Self {
             economy: 50.0,
             satisfaction: 50.0,
-            security: 80.0, // Start with high security
+            security: 80.0,
+            military: 20.0,
         }
+    }
+}
+
+#[derive(Debug, Resource, Deref, DerefMut)]
+pub struct AllNationMetrics(pub HashMap<Nation, NationMetrics>);
+
+impl Default for AllNationMetrics {
+    fn default() -> Self {
+        let mut metrics = HashMap::new();
+        metrics.insert(Nation::Tera, NationMetrics::default());
+        metrics.insert(Nation::Sora, NationMetrics::default());
+        metrics.insert(Nation::Aqua, NationMetrics::default());
+        Self(metrics)
     }
 }
 
