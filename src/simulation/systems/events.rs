@@ -77,6 +77,7 @@ pub fn event_generation_system(
         let actor = EventActor {
             id: identity.id,
             name: identity.name.clone(),
+            nation: identity.nation,
             faction: identity.faction,
             faction_label: faction_label(identity.faction).to_string(),
             biome: position.biome,
@@ -155,6 +156,7 @@ pub fn event_generation_system(
         let actor = EventActor {
             id: identity.id,
             name: identity.name.clone(),
+            nation: identity.nation,
             faction: identity.faction,
             faction_label: faction_label(identity.faction).to_string(),
             biome: position.biome,

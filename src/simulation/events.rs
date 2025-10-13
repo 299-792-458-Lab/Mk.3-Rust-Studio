@@ -26,8 +26,8 @@ pub enum WorldEventKind {
         projected_impact: String,
     },
     Warfare {
-        winner: EventActor,
-        loser: EventActor,
+        winner: Nation,
+        loser: Nation,
         territory_change: f32,
     },
 }
@@ -44,6 +44,7 @@ pub enum Sentiment {
 pub struct EventActor {
     pub id: u64,
     pub name: String,
+    pub nation: crate::simulation::Nation,
     pub faction: Faction,
     pub faction_label: String,
     pub biome: Biome,
@@ -108,7 +109,7 @@ impl WorldEvent {
             ),
             WorldEventKind::Warfare { winner, loser, territory_change } => format!(
                 "{}가 {}와의 전쟁에서 승리하여 영토 {:.2}를 획득했습니다.",
-                winner.name, loser.name, territory_change
+                winner.name(), loser.name(), territory_change
             ),
         }
     }
@@ -177,8 +178,8 @@ impl WorldEvent {
         tick: u64,
         epoch: &str,
         season: &str,
-        winner: EventActor,
-        loser: EventActor,
+        winner: Nation,
+        loser: Nation,
         territory_change: f32,
     ) -> Self {
         Self {

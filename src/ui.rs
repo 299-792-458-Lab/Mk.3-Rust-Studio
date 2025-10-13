@@ -46,6 +46,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
 
     // Event Log Panel - Using a Table for alignment
     let header_cells = [
+        "Nation",
         "Tick",
         "Category",
         "Actor/Source",
@@ -62,12 +63,23 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
         .rev()
         .take(20)
         .map(|event| {
-            let color = match event.sentiment() {
-                Sentiment::Positive => Color::Green,
-                Sentiment::Neutral => Color::Yellow,
-                Sentiment::Negative => Color::Red,
+            let (nation_cell, style) = match &event.kind {
+                WorldEventKind::Trade { actor, .. } => {
+                    let color = actor.nation.color();
+                    (Cell::from(actor.nation.name()).style(Style::default().fg(color)), Style::default().fg(Color::Green))
+                }
+                WorldEventKind::Social { convener, .. } => {
+                    let color = convener.nation.color();
+                    (Cell::from(convener.nation.name()).style(Style::default().fg(color)), Style::default().fg(Color::Green))
+                }
+                WorldEventKind::MacroShock { .. } => {
+                    (Cell::from("System"), Style::default().fg(Color::Yellow))
+                }
+                WorldEventKind::Warfare { winner, .. } => {
+                    let color = winner.nation.color();
+                    (Cell::from(winner.nation.name()).style(Style::default().fg(color)), Style::default().fg(Color::Red))
+                }
             };
-            let style = Style::default().fg(color);
 
             let (actor, details, impact) = match &event.kind {
                 WorldEventKind::Trade { actor, trade_focus, market_pressure } => (
@@ -85,9 +97,15 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
                     catalyst.clone(),
                     projected_impact.clone(),
                 ),
+                WorldEventKind::Warfare { winner, loser, territory_change } => (
+                    winner.name.clone(),
+                    format!("vs {}", loser.name),
+                    format!("+{:.2} territory", territory_change),
+                ),
             };
 
             let cells = vec![
+                nation_cell,
                 Cell::from(event.tick.to_string()),
                 Cell::from(event.category()),
                 Cell::from(actor),
@@ -102,6 +120,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     let table = Table::new(
         rows,
         [
+            Constraint::Length(10),
             Constraint::Length(5),
             Constraint::Length(10),
             Constraint::Length(15),
@@ -139,7 +158,7 @@ fn render_world_state_panel(frame: &mut Frame, area: Rect, snapshot: &ObserverSn
     let info_paragraph = Paragraph::new(info_lines);
     frame.render_widget(info_paragraph, panel_layout[0]);
 
-    let mut nations: Vec<_> = snapshot.all_metrics.0.keys().collect();
+    let mut nations: Vec<_> = snapshot.all_metrics.0.keys().copied().collect();
     nations.sort_by_key(|a| a.name());
 
     let nations_layout = Layout::default()
@@ -151,32 +170,33 @@ fn render_world_state_panel(frame: &mut Frame, area: Rect, snapshot: &ObserverSn
         ])
         .split(panel_layout[1]);
 
-    for (i, nation) in nations.iter().enumerate() {
+    for (i, &nation) in nations.iter().enumerate() {
         if i >= nations_layout.len() { break; } // Avoid panic if more than 3 nations
 
-        if let Some(metrics) = snapshot.all_metrics.0.get(nation) {
+        if let Some(metrics) = snapshot.all_metrics.0.get(&nation) {
+            let nation_color = nation.color();
             let mut nation_lines = vec![];
             nation_lines.push(Line::from(Span::styled(
                 nation.name(),
-                Style::default().bold().underlined(),
+                Style::default().bold().underlined().fg(nation_color),
             )));
 
             if metrics.is_destroyed {
                 nation_lines.push(Line::from(Span::styled(
-                    "-- 멸망 --",
+                    "-- DESTROYED --",
                     Style::default().fg(Color::Red).italic(),
                 )));
             } else {
-                nation_lines.push(Line::from(Span::styled("  경제", Style::default())));
-                nation_lines.push(create_bar(metrics.economy, 100.0, 10));
-                nation_lines.push(Line::from(Span::styled("  만족도", Style::default())));
-                nation_lines.push(create_bar(metrics.satisfaction, 100.0, 10));
-                nation_lines.push(Line::from(Span::styled("  치안", Style::default())));
-                nation_lines.push(create_bar(metrics.security, 100.0, 10));
-                nation_lines.push(Line::from(Span::styled("  군사력", Style::default())));
-                nation_lines.push(create_bar(metrics.military, 100.0, 10));
-                nation_lines.push(Line::from(Span::styled("  영토", Style::default())));
-                nation_lines.push(create_bar(metrics.territory, 100.0, 10));
+                nation_lines.push(Line::from(Span::styled("  Economy", Style::default())));
+                nation_lines.push(create_bar(metrics.economy, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  Satisfaction", Style::default())));
+                nation_lines.push(create_bar(metrics.satisfaction, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  Security", Style::default())));
+                nation_lines.push(create_bar(metrics.security, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  Military", Style::default())));
+                nation_lines.push(create_bar(metrics.military, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  Territory", Style::default())));
+                nation_lines.push(create_bar(metrics.territory, 100.0, 10, nation_color));
             }
             let nation_paragraph = Paragraph::new(nation_lines);
             frame.render_widget(nation_paragraph, nations_layout[i]);
@@ -223,11 +243,7 @@ impl<'a> Widget for MapWidget<'a> {
             // Simple character representation of a hex
             let hex_char = "██";
 
-            let color = match hex.owner {
-                Nation::Tera => Color::Blue,
-                Nation::Sora => Color::Red,
-                Nation::Aqua => Color::Green,
-            };
+            let color = hex.owner.color();
 
             // Draw the hex character
             if screen_x >= area.x as i32 && screen_x + hex_width as i32 <= (area.x + area.width) as i32 &&
@@ -238,19 +254,11 @@ impl<'a> Widget for MapWidget<'a> {
     }
 }
 
-fn create_bar(value: f32, max_value: f32, max_width: usize) -> Line<'static> {
+fn create_bar(value: f32, max_value: f32, max_width: usize, color: Color) -> Line<'static> {
     let percentage = (value / max_value).clamp(0.0, 1.0);
     let width = (percentage * max_width as f32) as usize;
     let bar_text = "█".repeat(width);
     let padding = " ".repeat(max_width - width);
-
-    let color = if percentage > 0.66 {
-        Color::Green
-    } else if percentage > 0.33 {
-        Color::Yellow
-    } else {
-        Color::Red
-    };
 
     let bar_span = Span::styled(bar_text, Style::default().fg(color));
     let padding_span = Span::raw(padding);

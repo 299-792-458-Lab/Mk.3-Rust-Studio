@@ -1,3 +1,4 @@
+use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,9 +11,17 @@ pub enum Nation {
 impl Nation {
     pub fn name(&self) -> &'static str {
         match self {
-            Nation::Tera => "테라",
-            Nation::Sora => "소라",
-            Nation::Aqua => "아쿠아",
+            Nation::Tera => "Tera",
+            Nation::Sora => "Sora",
+            Nation::Aqua => "Aqua",
+        }
+    }
+
+    pub fn color(&self) -> Color {
+        match self {
+            Nation::Tera => Color::Blue,
+            Nation::Sora => Color::Red,
+            Nation::Aqua => Color::Green,
         }
     }
 }

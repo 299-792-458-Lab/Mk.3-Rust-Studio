@@ -1,7 +1,7 @@
 // Warfare system
 
 use bevy_ecs::prelude::*;
-use crate::simulation::{AllNationMetrics, Nation, WorldTime};
+use crate::simulation::{AllNationMetrics, Nation, WorldTime, WorldEventLog, WorldMetadata};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
@@ -13,6 +13,8 @@ struct BattleResult {
 pub fn warfare_system(
     mut all_metrics: ResMut<AllNationMetrics>,
     time: Res<WorldTime>,
+    mut event_log: ResMut<crate::simulation::WorldEventLog>,
+    world_meta: Res<crate::simulation::WorldMetadata>,
 ) {
     let mut rng = SmallRng::seed_from_u64(time.tick.wrapping_mul(257));
     let mut battle_results = Vec::new();
@@ -49,6 +51,8 @@ pub fn warfare_system(
         }
     }
 
+    let (epoch, season) = world_meta.epoch_for_tick(time.tick);
+
     for result in battle_results {
         let territory_change = 0.5;
         let military_loss = 2.0;
@@ -70,5 +74,14 @@ pub fn warfare_system(
                 loser_metrics.is_destroyed = true;
             }
         }
+
+        event_log.push(crate::simulation::WorldEvent::warfare(
+            time.tick,
+            epoch,
+            season,
+            result.winner,
+            result.loser,
+            territory_change,
+        ));
     }
 }
