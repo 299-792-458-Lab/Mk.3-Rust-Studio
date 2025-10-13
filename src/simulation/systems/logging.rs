@@ -18,6 +18,7 @@ fn category_color(category: &str) -> Color {
         "무역" => Color::BrightCyan,
         "사회" => Color::BrightMagenta,
         "거시충격" => Color::BrightRed,
+        "전쟁" => Color::Red,
         _ => Color::White,
     }
 }
@@ -119,6 +120,26 @@ fn format_event_line(event: &WorldEvent) -> String {
                 stress,
                 catalyst,
                 impact
+            )
+        }
+        crate::simulation::WorldEventKind::Warfare {
+            winner,
+            loser,
+            territory_change,
+        } => {
+            let winner_badge = badge(winner.name(), winner.color());
+            let loser_badge = badge(loser.name(), loser.color());
+
+            format!(
+                "{} {} {} {} {} {}가 {}와의 전쟁에서 승리하여 영토 {:.2}를 획득했습니다.",
+                category_badge,
+                sentiment_badge,
+                tick_badge,
+                epoch_badge,
+                season_badge,
+                winner_badge,
+                loser_badge,
+                territory_change
             )
         }
     }

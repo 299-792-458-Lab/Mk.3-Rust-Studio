@@ -2,6 +2,7 @@
 
 use std::collections::VecDeque;
 
+use crate::simulation::Nation;
 use bevy_ecs::prelude::Resource;
 use serde::{Deserialize, Serialize};
 
