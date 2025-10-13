@@ -1,6 +1,6 @@
 use crate::simulation::events::{Sentiment, WorldEventKind};
 use crate::simulation::grid::HexGrid;
-use crate::simulation::{Nation, NationMetrics, ObserverSnapshot};
+use crate::simulation::{Nation, ObserverSnapshot};
 use ratatui::{
     prelude::*,
     style::Stylize,
@@ -181,7 +181,7 @@ struct MapWidget<'a> {
 
 impl<'a> Widget for MapWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let radius = self.grid.radius;
+        let _radius = self.grid.radius;
         let center_x = area.x + area.width / 2;
         let center_y = area.y + area.height / 2;
 

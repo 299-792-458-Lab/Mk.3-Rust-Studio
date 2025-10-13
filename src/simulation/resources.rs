@@ -7,7 +7,7 @@ use bevy_ecs::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Resource)]
+#[derive(Debug, Clone, Resource, Serialize, Deserialize)]
 pub struct NationMetrics {
     pub economy: f32,
     pub satisfaction: f32,

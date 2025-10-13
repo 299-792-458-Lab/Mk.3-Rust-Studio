@@ -1,6 +1,6 @@
 //! Shared observer snapshot structures exported via the API.
 
-use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, Nation, WorldEvent, HexGrid};
+use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, WorldEvent, HexGrid};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
