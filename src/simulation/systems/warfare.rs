@@ -17,7 +17,7 @@ pub fn warfare_system(
     let mut rng = SmallRng::seed_from_u64(time.tick.wrapping_mul(257));
     let mut battle_results = Vec::new();
 
-    let nations: Vec<Nation> = all_metrics.keys().cloned().collect();
+    let nations: Vec<Nation> = all_metrics.0.keys().cloned().collect();
 
     for i in 0..nations.len() {
         for j in (i + 1)..nations.len() {
@@ -25,8 +25,8 @@ pub fn warfare_system(
             let nation_b_key = nations[j];
 
             let (metrics_a, metrics_b) = (
-                all_metrics.get(&nation_a_key).unwrap(),
-                all_metrics.get(&nation_b_key).unwrap(),
+                all_metrics.0.get(&nation_a_key).unwrap(),
+                all_metrics.0.get(&nation_b_key).unwrap(),
             );
 
             if metrics_a.is_destroyed || metrics_b.is_destroyed {
@@ -53,14 +53,14 @@ pub fn warfare_system(
         let territory_change = 0.5;
         let military_loss = 2.0;
 
-        if let Some(winner_metrics) = all_metrics.get_mut(&result.winner) {
+        if let Some(winner_metrics) = all_metrics.0.get_mut(&result.winner) {
             winner_metrics.territory += territory_change;
             winner_metrics.military -= military_loss;
             winner_metrics.territory = winner_metrics.territory.max(0.0);
             winner_metrics.military = winner_metrics.military.max(0.0);
         }
 
-        if let Some(loser_metrics) = all_metrics.get_mut(&result.loser) {
+        if let Some(loser_metrics) = all_metrics.0.get_mut(&result.loser) {
             loser_metrics.territory -= territory_change;
             loser_metrics.military -= military_loss;
             loser_metrics.territory = loser_metrics.territory.max(0.0);

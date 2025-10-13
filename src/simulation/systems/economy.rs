@@ -47,7 +47,7 @@ pub fn economy_system(
     let (segment, season) = world_meta.epoch_for_tick(time.tick);
 
     // Apply a decay factor to all nations' metrics
-    for metrics in all_metrics.values_mut() {
+    for metrics in all_metrics.0.values_mut() {
         metrics.economy *= 0.999;
         metrics.satisfaction *= 0.998;
         metrics.security *= 0.999;
@@ -56,7 +56,7 @@ pub fn economy_system(
 
     for (identity, position, behavior, mut inventory) in &mut query {
         let nation = identity.nation;
-        let metrics = all_metrics.get_mut(&nation).unwrap();
+        let metrics = all_metrics.0.get_mut(&nation).unwrap();
 
         let biome = position.biome;
         let faction = identity.faction;

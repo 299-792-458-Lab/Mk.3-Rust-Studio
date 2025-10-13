@@ -115,11 +115,11 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
         Line::from(""),
     ];
 
-    let mut nations: Vec<_> = snapshot.all_metrics.keys().collect();
+    let mut nations: Vec<_> = snapshot.all_metrics.0.keys().collect();
     nations.sort_by_key(|a| a.name()); // Sort for consistent order
 
     for nation in nations {
-        if let Some(metrics) = snapshot.all_metrics.get(nation) {
+        if let Some(metrics) = snapshot.all_metrics.0.get(nation) {
             world_state_lines.push(Line::from(Span::styled(
                 nation.name(),
                 Style::default().bold().underlined(),
