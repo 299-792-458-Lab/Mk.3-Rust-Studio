@@ -74,9 +74,9 @@ impl SimulationWorld {
 
     fn refresh_observer_snapshot(&mut self) {
         let tick = self.world.resource::<WorldTime>().tick;
+        let world_meta = self.world.resource::<WorldMetadata>().clone();
         let (epoch, season) = {
-            let meta = self.world.resource::<WorldMetadata>();
-            let (epoch, season) = meta.epoch_for_tick(tick);
+            let (epoch, season) = world_meta.epoch_for_tick(tick);
             (epoch.to_string(), season.to_string())
         };
 
@@ -96,8 +96,15 @@ impl SimulationWorld {
                     id: identity.id,
                     name: identity.name.clone(),
                     faction: identity.faction,
+                    faction_label: faction_label(identity.faction).to_string(),
                     biome: position.biome,
-                    behavior: behavior.state,
+                    biome_label: world_meta
+                        .biomes
+                        .get(&position.biome)
+                        .map(|meta| meta.label.to_string())
+                        .unwrap_or_else(|| format!("{:?}", position.biome)),
+                    behavior_state: behavior.state,
+                    behavior_label: behavior_label(behavior.state).to_string(),
                     currency: inventory.currency,
                     wealth: attributes.wealth,
                     fame: attributes.fame,
@@ -126,7 +133,7 @@ fn seed_entities(world: &mut World) {
             world_meta.anchor_position(Biome::Market),
             Inventory {
                 items: vec![ItemStack {
-                    item: ItemKind::Resource("Herbs".into()),
+                    item: ItemKind::Resource("약초".into()),
                     quantity: 10,
                 }],
                 currency: 100.0,
@@ -154,7 +161,7 @@ fn seed_entities(world: &mut World) {
             world_meta.anchor_position(Biome::Forest),
             Inventory {
                 items: vec![ItemStack {
-                    item: ItemKind::Equipment("Dagger".into()),
+                    item: ItemKind::Equipment("단검".into()),
                     quantity: 1,
                 }],
                 currency: 45.0,
@@ -207,7 +214,7 @@ fn seed_entities(world: &mut World) {
             world_meta.anchor_position(Biome::Village),
             Inventory {
                 items: vec![ItemStack {
-                    item: ItemKind::Artifact("Sun Reliquary".into()),
+                    item: ItemKind::Artifact("태양 성물함".into()),
                     quantity: 1,
                 }],
                 currency: 30.0,

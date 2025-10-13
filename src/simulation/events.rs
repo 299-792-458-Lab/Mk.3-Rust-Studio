@@ -32,8 +32,11 @@ pub struct EventActor {
     pub id: u64,
     pub name: String,
     pub faction: Faction,
+    pub faction_label: String,
     pub biome: Biome,
+    pub biome_label: String,
     pub behavior_hint: BehaviorState,
+    pub behavior_hint_label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

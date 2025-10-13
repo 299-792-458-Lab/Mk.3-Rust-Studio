@@ -6,7 +6,7 @@ use rand::{Rng, SeedableRng};
 
 use crate::simulation::{
     Attributes, Behavior, BehaviorState, EventActor, Inventory, Position, WorldEvent,
-    WorldEventLog, WorldMetadata, WorldTime,
+    WorldEventLog, WorldMetadata, WorldTime, behavior_label, faction_label,
 };
 
 pub fn event_generation_system(
@@ -78,8 +78,13 @@ pub fn event_generation_system(
             id: identity.id,
             name: identity.name.clone(),
             faction: identity.faction,
+            faction_label: faction_label(identity.faction).to_string(),
             biome: position.biome,
+            biome_label: biome_profile
+                .map(|meta| meta.label.to_string())
+                .unwrap_or_else(|| format!("{:?}", position.biome)),
             behavior_hint: behavior_state,
+            behavior_hint_label: behavior_label(behavior_state).to_string(),
         };
 
         let market_label = biome_profile
@@ -151,8 +156,13 @@ pub fn event_generation_system(
             id: identity.id,
             name: identity.name.clone(),
             faction: identity.faction,
+            faction_label: faction_label(identity.faction).to_string(),
             biome: position.biome,
+            biome_label: biome_profile
+                .map(|meta| meta.label.to_string())
+                .unwrap_or_else(|| format!("{:?}", position.biome)),
             behavior_hint: behavior_state,
+            behavior_hint_label: behavior_label(behavior_state).to_string(),
         };
 
         event_log.push(WorldEvent::social(

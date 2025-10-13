@@ -417,18 +417,8 @@ impl Default for WorldMetadata {
                 "사막 원정",
                 "시장 환류",
             ],
-            stressors: vec![
-                "가뭄 압박",
-                "산적 급습",
-                "화폐 절하",
-                "유물 부족",
-            ],
-            catalysts: vec![
-                "사원 축제",
-                "탐험가 돌파구",
-                "길드 관세 인하",
-                "연합 풍년",
-            ],
+            stressors: vec!["가뭄 압박", "산적 급습", "화폐 절하", "유물 부족"],
+            catalysts: vec!["사원 축제", "탐험가 돌파구", "길드 관세 인하", "연합 풍년"],
         };
 
         let epochs = EpochCadence {
