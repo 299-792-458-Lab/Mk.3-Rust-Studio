@@ -125,14 +125,24 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
                 nation.name(),
                 Style::default().bold().underlined(),
             )));
-            world_state_lines.push(Line::from(Span::styled("  경제", Style::default())));
-            world_state_lines.push(create_bar(metrics.economy, 100.0, 18));
-            world_state_lines.push(Line::from(Span::styled("  만족도", Style::default())));
-            world_state_lines.push(create_bar(metrics.satisfaction, 100.0, 18));
-            world_state_lines.push(Line::from(Span::styled("  치안", Style::default())));
-            world_state_lines.push(create_bar(metrics.security, 100.0, 18));
-            world_state_lines.push(Line::from(Span::styled("  군사력", Style::default())));
-            world_state_lines.push(create_bar(metrics.military, 100.0, 18));
+
+            if metrics.is_destroyed {
+                world_state_lines.push(Line::from(Span::styled(
+                    "-- 멸망 --",
+                    Style::default().fg(Color::Red).italic(),
+                )));
+            } else {
+                world_state_lines.push(Line::from(Span::styled("  경제", Style::default())));
+                world_state_lines.push(create_bar(metrics.economy, 100.0, 18));
+                world_state_lines.push(Line::from(Span::styled("  만족도", Style::default())));
+                world_state_lines.push(create_bar(metrics.satisfaction, 100.0, 18));
+                world_state_lines.push(Line::from(Span::styled("  치안", Style::default())));
+                world_state_lines.push(create_bar(metrics.security, 100.0, 18));
+                world_state_lines.push(Line::from(Span::styled("  군사력", Style::default())));
+                world_state_lines.push(create_bar(metrics.military, 100.0, 18));
+                world_state_lines.push(Line::from(Span::styled("  영토", Style::default())));
+                world_state_lines.push(create_bar(metrics.territory, 100.0, 18));
+            }
             world_state_lines.push(Line::from(""));
         }
     }

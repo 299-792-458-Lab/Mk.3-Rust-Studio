@@ -12,6 +12,8 @@ pub struct NationMetrics {
     pub satisfaction: f32,
     pub security: f32,
     pub military: f32,
+    pub territory: f32,
+    pub is_destroyed: bool,
 }
 
 impl Default for NationMetrics {
@@ -21,6 +23,8 @@ impl Default for NationMetrics {
             satisfaction: 50.0,
             security: 80.0,
             military: 20.0,
+            territory: 33.33,
+            is_destroyed: false,
         }
     }
 }
