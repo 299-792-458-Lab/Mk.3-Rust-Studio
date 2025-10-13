@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use crate::simulation::Nation;
-use bevy_ecs::prelude::{Deref, DerefMut, Resource};
+use bevy_ecs::prelude::Resource;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Resource)]
@@ -29,7 +29,7 @@ impl Default for NationMetrics {
     }
 }
 
-#[derive(Debug, Resource, Deref, DerefMut)]
+#[derive(Debug, Resource)]
 pub struct AllNationMetrics(pub HashMap<Nation, NationMetrics>);
 
 impl Default for AllNationMetrics {

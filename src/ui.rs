@@ -104,8 +104,6 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     frame.render_widget(table, inner_layout[1]);
 }
 
-use crate::simulation::{Nation, NationMetrics};
-
 fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration) -> Paragraph {
     let total_entities = snapshot.entities.len();
     let tick = snapshot.tick;
