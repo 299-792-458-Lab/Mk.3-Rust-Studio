@@ -76,8 +76,8 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
                     (Cell::from("System"), Style::default().fg(Color::Yellow))
                 }
                 WorldEventKind::Warfare { winner, .. } => {
-                    let color = winner.nation.color();
-                    (Cell::from(winner.nation.name()).style(Style::default().fg(color)), Style::default().fg(Color::Red))
+                    let color = winner.color();
+                    (Cell::from(winner.name()).style(Style::default().fg(color)), Style::default().fg(Color::Red))
                 }
             };
 
@@ -98,8 +98,8 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
                     projected_impact.clone(),
                 ),
                 WorldEventKind::Warfare { winner, loser, territory_change } => (
-                    winner.name.clone(),
-                    format!("vs {}", loser.name),
+                    winner.name().to_string(),
+                    format!("vs {}", loser.name()),
                     format!("+{:.2} territory", territory_change),
                 ),
             };
