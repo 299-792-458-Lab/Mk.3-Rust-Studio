@@ -38,7 +38,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
         .split(content_layout[0]);
 
     // World State Panel
-    frame.render_widget(render_world_state_panel(snapshot, tick_duration), top_layout[0]);
+    render_world_state_panel(frame, top_layout[0], snapshot, tick_duration);
 
     // Map Widget
     let map_widget = MapWidget { grid: &snapshot.grid };
@@ -115,53 +115,81 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     frame.render_widget(table, content_layout[1]);
 }
 
-fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration) -> Paragraph {
+fn render_world_state_panel(frame: &mut Frame, area: Rect, snapshot: &ObserverSnapshot, tick_duration: Duration) {
+    let outer_block = Block::default().title("World State").borders(Borders::ALL);
+    frame.render_widget(outer_block, area);
+
+    let panel_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([
+            Constraint::Length(2),
+            Constraint::Min(0),
+            Constraint::Length(3),
+        ])
+        .split(area);
+
     let total_entities = snapshot.entities.len();
     let tick = snapshot.tick;
 
-    let mut world_state_lines = vec![
+    let info_lines = vec![
         Line::from(format!("Total Entities: {}", total_entities)),
         Line::from(format!("Tick: {}", tick)),
-        Line::from(""),
     ];
+    let info_paragraph = Paragraph::new(info_lines);
+    frame.render_widget(info_paragraph, panel_layout[0]);
 
     let mut nations: Vec<_> = snapshot.all_metrics.0.keys().collect();
-    nations.sort_by_key(|a| a.name()); // Sort for consistent order
+    nations.sort_by_key(|a| a.name());
 
-    for nation in nations {
+    let nations_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Ratio(1, 3),
+            Constraint::Ratio(1, 3),
+            Constraint::Ratio(1, 3),
+        ])
+        .split(panel_layout[1]);
+
+    for (i, nation) in nations.iter().enumerate() {
+        if i >= nations_layout.len() { break; } // Avoid panic if more than 3 nations
+
         if let Some(metrics) = snapshot.all_metrics.0.get(nation) {
-            world_state_lines.push(Line::from(Span::styled(
+            let mut nation_lines = vec![];
+            nation_lines.push(Line::from(Span::styled(
                 nation.name(),
                 Style::default().bold().underlined(),
             )));
 
             if metrics.is_destroyed {
-                world_state_lines.push(Line::from(Span::styled(
+                nation_lines.push(Line::from(Span::styled(
                     "-- 멸망 --",
                     Style::default().fg(Color::Red).italic(),
                 )));
             } else {
-                world_state_lines.push(Line::from(Span::styled("  경제", Style::default())));
-                world_state_lines.push(create_bar(metrics.economy, 100.0, 18));
-                world_state_lines.push(Line::from(Span::styled("  만족도", Style::default())));
-                world_state_lines.push(create_bar(metrics.satisfaction, 100.0, 18));
-                world_state_lines.push(Line::from(Span::styled("  치안", Style::default())));
-                world_state_lines.push(create_bar(metrics.security, 100.0, 18));
-                world_state_lines.push(Line::from(Span::styled("  군사력", Style::default())));
-                world_state_lines.push(create_bar(metrics.military, 100.0, 18));
-                world_state_lines.push(Line::from(Span::styled("  영토", Style::default())));
-                world_state_lines.push(create_bar(metrics.territory, 100.0, 18));
+                nation_lines.push(Line::from(Span::styled("  경제", Style::default())));
+                nation_lines.push(create_bar(metrics.economy, 100.0, 10));
+                nation_lines.push(Line::from(Span::styled("  만족도", Style::default())));
+                nation_lines.push(create_bar(metrics.satisfaction, 100.0, 10));
+                nation_lines.push(Line::from(Span::styled("  치안", Style::default())));
+                nation_lines.push(create_bar(metrics.security, 100.0, 10));
+                nation_lines.push(Line::from(Span::styled("  군사력", Style::default())));
+                nation_lines.push(create_bar(metrics.military, 100.0, 10));
+                nation_lines.push(Line::from(Span::styled("  영토", Style::default())));
+                nation_lines.push(create_bar(metrics.territory, 100.0, 10));
             }
-            world_state_lines.push(Line::from(""));
+            let nation_paragraph = Paragraph::new(nation_lines);
+            frame.render_widget(nation_paragraph, nations_layout[i]);
         }
     }
 
-    world_state_lines.push(Line::from(Span::styled(
+    let mut speed_lines = vec![];
+    speed_lines.push(Line::from(Span::styled(
         "Tick Speed",
         Style::default().bold(),
     )));
-    world_state_lines.push(Line::from(format!("{} ms/tick", tick_duration.as_millis())));
-    world_state_lines.push(Line::from(vec![
+    speed_lines.push(Line::from(format!("{} ms/tick", tick_duration.as_millis())));
+    speed_lines.push(Line::from(vec![
         Span::from("["),
         Span::styled("-", Style::default().fg(Color::Red).bold()),
         Span::from("] ["),
@@ -170,9 +198,8 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
         Span::styled("R", Style::default().fg(Color::Yellow).bold()),
         Span::from("]"),
     ]));
-
-    Paragraph::new(world_state_lines)
-        .block(Block::default().title("World State").borders(Borders::ALL))
+    let speed_paragraph = Paragraph::new(speed_lines);
+    frame.render_widget(speed_paragraph, panel_layout[2]);
 }
 
 struct MapWidget<'a> {

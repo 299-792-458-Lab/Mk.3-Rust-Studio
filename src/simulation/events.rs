@@ -25,6 +25,11 @@ pub enum WorldEventKind {
         catalyst: String,
         projected_impact: String,
     },
+    Warfare {
+        winner: EventActor,
+        loser: EventActor,
+        territory_change: f32,
+    },
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -61,6 +66,7 @@ impl WorldEvent {
             WorldEventKind::Trade { .. } => "무역",
             WorldEventKind::Social { .. } => "사회",
             WorldEventKind::MacroShock { .. } => "거시충격",
+            WorldEventKind::Warfare { .. } => "전쟁",
         }
     }
 
@@ -69,6 +75,7 @@ impl WorldEvent {
             WorldEventKind::Trade { .. } => Sentiment::Positive,
             WorldEventKind::Social { .. } => Sentiment::Positive,
             WorldEventKind::MacroShock { .. } => Sentiment::Negative,
+            WorldEventKind::Warfare { .. } => Sentiment::Negative,
         }
     }
 
@@ -98,6 +105,10 @@ impl WorldEvent {
             } => format!(
                 "{} | 촉발 요인: {} | 영향: {}",
                 stressor, catalyst, projected_impact
+            ),
+            WorldEventKind::Warfare { winner, loser, territory_change } => format!(
+                "{}가 {}와의 전쟁에서 승리하여 영토 {:.2}를 획득했습니다.",
+                winner.name, loser.name, territory_change
             ),
         }
     }
@@ -161,6 +172,26 @@ impl WorldEvent {
             },
         }
     }
+
+    pub fn warfare(
+        tick: u64,
+        epoch: &str,
+        season: &str,
+        winner: EventActor,
+        loser: EventActor,
+        territory_change: f32,
+    ) -> Self {
+        Self {
+            tick,
+            epoch: epoch.to_string(),
+            season: season.to_string(),
+            kind: WorldEventKind::Warfare {
+                winner,
+                loser,
+                territory_change,
+            },
+        }
+    }
 }
 
 #[derive(Debug, Resource)]
@@ -194,3 +225,4 @@ impl Default for WorldEventLog {
         Self::new(256)
     }
 }
+
