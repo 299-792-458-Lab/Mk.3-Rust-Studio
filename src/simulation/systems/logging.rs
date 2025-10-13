@@ -127,8 +127,8 @@ fn format_event_line(event: &WorldEvent) -> String {
             loser,
             territory_change,
         } => {
-            let winner_badge = badge(winner.name(), winner.color());
-            let loser_badge = badge(loser.name(), loser.color());
+            let winner_badge = badge(winner.name(), winner.logging_color());
+            let loser_badge = badge(loser.name(), loser.logging_color());
 
             format!(
                 "{} {} {} {} {} {}가 {}와의 전쟁에서 승리하여 영토 {:.2}를 획득했습니다.",

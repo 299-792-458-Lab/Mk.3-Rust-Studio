@@ -1,3 +1,4 @@
+use colored::Color as ColoredColor;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +23,14 @@ impl Nation {
             Nation::Tera => Color::Blue,
             Nation::Sora => Color::Red,
             Nation::Aqua => Color::Green,
+        }
+    }
+
+    pub fn logging_color(&self) -> ColoredColor {
+        match self {
+            Nation::Tera => ColoredColor::Blue,
+            Nation::Sora => ColoredColor::Red,
+            Nation::Aqua => ColoredColor::Green,
         }
     }
 }
