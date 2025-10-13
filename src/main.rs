@@ -57,17 +57,18 @@ async fn main() -> anyhow::Result<()> {
     while app_should_run {
         terminal.draw(|frame| {
             let snapshot = observer.read().expect("Observer lock is poisoned").clone();
-            ui::render(frame, &snapshot);
+            let tick_duration = *tick_duration_tx.borrow();
+            ui::render(frame, &snapshot, tick_duration);
         })?;
 
         if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                match key.code {
+            match event::read()? {
+                Event::Key(key) => match key.code {
                     KeyCode::Char('q') => app_should_run = false,
                     KeyCode::Char('+') | KeyCode::Char('=') => {
                         let current_duration = *tick_duration_tx.borrow();
-                        let new_duration = current_duration / 2;
-                        tick_duration_tx.send(new_duration).ok(); // Ignore error if receiver is dropped
+                        let new_duration = (current_duration / 2).max(Duration::from_millis(1));
+                        tick_duration_tx.send(new_duration).ok();
                     }
                     KeyCode::Char('-') => {
                         let current_duration = *tick_duration_tx.borrow();
@@ -78,7 +79,28 @@ async fn main() -> anyhow::Result<()> {
                         tick_duration_tx.send(initial_tick_duration).ok();
                     }
                     _ => {}
+                },
+                Event::Mouse(mouse) => {
+                    if mouse.kind == event::MouseEventKind::Down(event::MouseButton::Left) {
+                        // These coordinates are hardcoded based on the UI layout
+                        // A more robust solution would calculate them dynamically
+                        let button_y = 15; // Approximate line number for the buttons
+                        if mouse.row == button_y {
+                            if (1..=3).contains(&mouse.column) { // [-]
+                                let current_duration = *tick_duration_tx.borrow();
+                                let new_duration = current_duration * 2;
+                                tick_duration_tx.send(new_duration).ok();
+                            } else if (5..=7).contains(&mouse.column) { // [+]
+                                let current_duration = *tick_duration_tx.borrow();
+                                let new_duration = (current_duration / 2).max(Duration::from_millis(1));
+                                tick_duration_tx.send(new_duration).ok();
+                            } else if (9..=11).contains(&mouse.column) { // [R]
+                                tick_duration_tx.send(initial_tick_duration).ok();
+                            }
+                        }
+                    }
                 }
+                _ => {}
             }
         }
     }
@@ -93,13 +115,13 @@ async fn main() -> anyhow::Result<()> {
 
 fn init_terminal() -> io::Result<Terminal<impl Backend>> {
     enable_raw_mode()?;
-    stdout().execute(EnterAlternateScreen)?;
+    stdout().execute(EnterAlternateScreen)?.execute(event::EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout());
     Terminal::new(backend)
 }
 
 fn restore_terminal() -> io::Result<()> {
     disable_raw_mode()?;
-    stdout().execute(LeaveAlternateScreen)?;
+    stdout().execute(LeaveAlternateScreen)?.execute(event::DisableMouseCapture)?;
     Ok(())
 }

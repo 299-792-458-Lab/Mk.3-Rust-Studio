@@ -7,7 +7,9 @@ use ratatui::{
     widgets::{Block, Borders, Cell, Paragraph, Row, Table},
 };
 
-pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
+use std::time::Duration;
+
+pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Duration) {
     // Main layout
     let main_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -29,7 +31,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
         .split(main_layout[1]);
 
     // World State Panel
-    frame.render_widget(render_world_state_panel(snapshot), inner_layout[0]);
+    frame.render_widget(render_world_state_panel(snapshot, tick_duration), inner_layout[0]);
 
     // Event Log Panel - Using a Table for alignment
     let header_cells = [
@@ -102,7 +104,53 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
     frame.render_widget(table, inner_layout[1]);
 }
 
-fn render_world_state_panel(snapshot: &ObserverSnapshot) -> Paragraph {
+fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration) -> Paragraph {
+    let total_entities = snapshot.entities.len();
+    let tick = snapshot.tick;
+
+    // Calculate metrics
+    let avg_wealth = if total_entities > 0 {
+        snapshot.entities.iter().map(|e| e.wealth).sum::<f32>() / total_entities as f32
+    } else {
+        0.0
+    };
+
+    let avg_fame = if total_entities > 0 {
+        snapshot.entities.iter().map(|e| e.fame).sum::<f32>() / total_entities as f32
+    } else {
+        0.0
+    };
+
+    // Placeholder for security
+    let security = 75.0;
+
+    let world_state_lines = vec![
+        Line::from(format!("Total Entities: {}", total_entities)),
+        Line::from(format!("Tick: {}", tick)),
+        Line::from(""),
+        Line::from(Span::styled("경제", Style::default().bold())),
+        create_bar(avg_wealth, 100.0, 20),
+        Line::from(Span::styled("만족도", Style::default().bold())),
+        create_bar(avg_fame, 100.0, 20),
+        Line::from(Span::styled("치안", Style::default().bold())),
+        create_bar(security, 100.0, 20),
+        Line::from(""),
+        Line::from(Span::styled("Tick Speed", Style::default().bold())),
+        Line::from(format!("{} ms/tick", tick_duration.as_millis())),
+        Line::from(vec![
+            Span::from("["),
+            Span::styled("-", Style::default().fg(Color::Red).bold()),
+            Span::from("] ["),
+            Span::styled("+", Style::default().fg(Color::Green).bold()),
+            Span::from("] ["),
+            Span::styled("R", Style::default().fg(Color::Yellow).bold()),
+            Span::from("]"),
+        ]),
+    ];
+
+    Paragraph::new(world_state_lines)
+        .block(Block::default().title("World State").borders(Borders::ALL))
+}
     let total_entities = snapshot.entities.len();
     let tick = snapshot.tick;
 
