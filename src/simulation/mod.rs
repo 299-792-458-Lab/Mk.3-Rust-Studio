@@ -116,7 +116,7 @@ impl SimulationWorld {
             )
             .collect::<Vec<_>>();
 
-        let metrics = self.world.resource::<WorldMetrics>();
+        let metrics = self.world.resource::<AllNationMetrics>();
 
         if let Ok(mut snapshot) = self.observer.write() {
             snapshot.update(tick, epoch, season, metrics, entities, events);

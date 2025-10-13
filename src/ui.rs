@@ -1,5 +1,5 @@
 use crate::simulation::events::{Sentiment, WorldEventKind};
-use crate::simulation::ObserverSnapshot;
+use crate::simulation::{Nation, NationMetrics, ObserverSnapshot};
 use ratatui::{
     prelude::*,
     style::Stylize,
@@ -104,33 +104,53 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     frame.render_widget(table, inner_layout[1]);
 }
 
+use crate::simulation::{Nation, NationMetrics};
+
 fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration) -> Paragraph {
     let total_entities = snapshot.entities.len();
     let tick = snapshot.tick;
 
-    let world_state_lines = vec![
+    let mut world_state_lines = vec![
         Line::from(format!("Total Entities: {}", total_entities)),
         Line::from(format!("Tick: {}", tick)),
         Line::from(""),
-        Line::from(Span::styled("경제", Style::default().bold())),
-        create_bar(snapshot.economy, 100.0, 20),
-        Line::from(Span::styled("만족도", Style::default().bold())),
-        create_bar(snapshot.satisfaction, 100.0, 20),
-        Line::from(Span::styled("치안", Style::default().bold())),
-        create_bar(snapshot.security, 100.0, 20),
-        Line::from(""),
-        Line::from(Span::styled("Tick Speed", Style::default().bold())),
-        Line::from(format!("{} ms/tick", tick_duration.as_millis())),
-        Line::from(vec![
-            Span::from("["),
-            Span::styled("-", Style::default().fg(Color::Red).bold()),
-            Span::from("] ["),
-            Span::styled("+", Style::default().fg(Color::Green).bold()),
-            Span::from("] ["),
-            Span::styled("R", Style::default().fg(Color::Yellow).bold()),
-            Span::from("]"),
-        ]),
     ];
+
+    let mut nations: Vec<_> = snapshot.all_metrics.keys().collect();
+    nations.sort_by_key(|a| a.name()); // Sort for consistent order
+
+    for nation in nations {
+        if let Some(metrics) = snapshot.all_metrics.get(nation) {
+            world_state_lines.push(Line::from(Span::styled(
+                nation.name(),
+                Style::default().bold().underlined(),
+            )));
+            world_state_lines.push(Line::from(Span::styled("  경제", Style::default())));
+            world_state_lines.push(create_bar(metrics.economy, 100.0, 18));
+            world_state_lines.push(Line::from(Span::styled("  만족도", Style::default())));
+            world_state_lines.push(create_bar(metrics.satisfaction, 100.0, 18));
+            world_state_lines.push(Line::from(Span::styled("  치안", Style::default())));
+            world_state_lines.push(create_bar(metrics.security, 100.0, 18));
+            world_state_lines.push(Line::from(Span::styled("  군사력", Style::default())));
+            world_state_lines.push(create_bar(metrics.military, 100.0, 18));
+            world_state_lines.push(Line::from(""));
+        }
+    }
+
+    world_state_lines.push(Line::from(Span::styled(
+        "Tick Speed",
+        Style::default().bold(),
+    )));
+    world_state_lines.push(Line::from(format!("{} ms/tick", tick_duration.as_millis())));
+    world_state_lines.push(Line::from(vec![
+        Span::from("["),
+        Span::styled("-", Style::default().fg(Color::Red).bold()),
+        Span::from("] ["),
+        Span::styled("+", Style::default().fg(Color::Green).bold()),
+        Span::from("] ["),
+        Span::styled("R", Style::default().fg(Color::Yellow).bold()),
+        Span::from("]"),
+    ]));
 
     Paragraph::new(world_state_lines)
         .block(Block::default().title("World State").borders(Borders::ALL))

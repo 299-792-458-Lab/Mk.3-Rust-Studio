@@ -5,7 +5,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use crate::simulation::{
-    Behavior, BehaviorState, Identity, Inventory, Position, WorldMetadata, WorldMetrics, WorldTime,
+    Behavior, BehaviorState, Identity, Inventory, Position, AllNationMetrics, WorldMetadata, WorldTime,
 };
 
 fn season_trade_modifier(season: &str) -> f32 {
@@ -40,18 +40,24 @@ fn upkeep_penalty(base: f32, upkeep: f32) -> f32 {
 
 pub fn economy_system(
     mut query: Query<(&Identity, &Position, &Behavior, &mut Inventory)>,
-    mut metrics: ResMut<WorldMetrics>,
+    mut all_metrics: ResMut<AllNationMetrics>,
     world_meta: Res<WorldMetadata>,
     time: Res<WorldTime>,
 ) {
     let (segment, season) = world_meta.epoch_for_tick(time.tick);
 
-    // Apply a decay factor to metrics
-    metrics.economy *= 0.999;
-    metrics.satisfaction *= 0.998;
-    metrics.security *= 0.999;
+    // Apply a decay factor to all nations' metrics
+    for metrics in all_metrics.values_mut() {
+        metrics.economy *= 0.999;
+        metrics.satisfaction *= 0.998;
+        metrics.security *= 0.999;
+        metrics.military *= 0.999;
+    }
 
     for (identity, position, behavior, mut inventory) in &mut query {
+        let nation = identity.nation;
+        let metrics = all_metrics.get_mut(&nation).unwrap();
+
         let biome = position.biome;
         let faction = identity.faction;
 
@@ -100,10 +106,11 @@ pub fn economy_system(
             metrics.economy += gather_gain * 0.03;
             metrics.satisfaction += gather_gain * 0.01;
         }
-    }
 
-    // Clamp metrics to 0-100 range
-    metrics.economy = metrics.economy.clamp(0.0, 100.0);
-    metrics.satisfaction = metrics.satisfaction.clamp(0.0, 100.0);
-    metrics.security = metrics.security.clamp(0.0, 100.0);
+        // Clamp metrics to 0-100 range
+        metrics.economy = metrics.economy.clamp(0.0, 100.0);
+        metrics.satisfaction = metrics.satisfaction.clamp(0.0, 100.0);
+        metrics.security = metrics.security.clamp(0.0, 100.0);
+        metrics.military = metrics.military.clamp(0.0, 100.0);
+    }
 }

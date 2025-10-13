@@ -1,8 +1,7 @@
 //! Shared observer snapshot structures exported via the API.
 
+use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, Nation, WorldEvent};
 use serde::Serialize;
-
-use crate::simulation::{BehaviorState, Biome, Faction, WorldEvent, WorldMetrics};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EntitySnapshot {
@@ -24,9 +23,7 @@ pub struct ObserverSnapshot {
     pub tick: u64,
     pub epoch: String,
     pub season: String,
-    pub economy: f32,
-    pub satisfaction: f32,
-    pub security: f32,
+    pub all_metrics: AllNationMetrics,
     pub entities: Vec<EntitySnapshot>,
     pub events: Vec<WorldEvent>,
 }
@@ -37,9 +34,7 @@ impl ObserverSnapshot {
             tick: 0,
             epoch: "새벽".to_string(),
             season: "꽃피움 계절".to_string(),
-            economy: 50.0,
-            satisfaction: 50.0,
-            security: 80.0,
+            all_metrics: AllNationMetrics::default(),
             entities: Vec::new(),
             events: Vec::new(),
         }
@@ -50,16 +45,14 @@ impl ObserverSnapshot {
         tick: u64,
         epoch: String,
         season: String,
-        metrics: &WorldMetrics,
+        metrics: &AllNationMetrics,
         entities: Vec<EntitySnapshot>,
         events: Vec<WorldEvent>,
     ) {
         self.tick = tick;
         self.epoch = epoch;
         self.season = season;
-        self.economy = metrics.economy;
-        self.satisfaction = metrics.satisfaction;
-        self.security = metrics.security;
+        self.all_metrics = metrics.clone();
         self.entities = entities;
         self.events = events;
     }
