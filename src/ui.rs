@@ -29,14 +29,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
         .split(main_layout[1]);
 
     // World State Panel
-    let world_state_text = format!(
-        "Total Entities: {}\nTick: {}",
-        snapshot.entities.len(),
-        snapshot.tick,
-    );
-    let state_widget = Paragraph::new(world_state_text)
-        .block(Block::default().title("World State").borders(Borders::ALL));
-    frame.render_widget(state_widget, inner_layout[0]);
+    frame.render_widget(render_world_state_panel(snapshot), inner_layout[0]);
 
     // Event Log Panel - Using a Table for alignment
     let header_cells = [
@@ -107,4 +100,46 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
     .block(Block::default().title("Event Log").borders(Borders::ALL));
 
     frame.render_widget(table, inner_layout[1]);
+}
+
+fn render_world_state_panel(snapshot: &ObserverSnapshot) -> Paragraph {
+    let total_entities = snapshot.entities.len();
+    let tick = snapshot.tick;
+
+    // Calculate metrics
+    let avg_wealth = if total_entities > 0 {
+        snapshot.entities.iter().map(|e| e.wealth).sum::<f32>() / total_entities as f32
+    } else {
+        0.0
+    };
+
+    let avg_fame = if total_entities > 0 {
+        snapshot.entities.iter().map(|e| e.fame).sum::<f32>() / total_entities as f32
+    } else {
+        0.0
+    };
+
+    // Placeholder for security
+    let security = 75.0;
+
+    // Create bar graphs
+    let max_bar_width = 20;
+    let wealth_bar = "█".repeat(((avg_wealth / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
+    let fame_bar = "█".repeat(((avg_fame / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
+    let security_bar = "█".repeat(((security / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
+
+    let world_state_text = vec![
+        Line::from(format!("Total Entities: {}", total_entities)),
+        Line::from(format!("Tick: {}", tick)),
+        Line::from(""),
+        Line::from(Span::styled("경제", Style::default().bold())),
+        Line::from(format!("[{:<20}] {:.1}%", wealth_bar, avg_wealth)),
+        Line::from(Span::styled("만족도", Style::default().bold())),
+        Line::from(format!("[{:<20}] {:.1}%", fame_bar, avg_fame)),
+        Line::from(Span::styled("치안", Style::default().bold())),
+        Line::from(format!("[{:<20}] {:.1}%", security_bar, security)),
+    ];
+
+    Paragraph::new(world_state_text)
+        .block(Block::default().title("World State").borders(Borders::ALL))
 }
