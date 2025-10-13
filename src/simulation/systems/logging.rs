@@ -30,32 +30,68 @@ pub fn logging_system(
         .iter()
         .next()
         .map(|(identity, behavior, position)| {
-            let biome_summary = world_meta
+            let (biome_summary, resource_hint, tension_hint, description_snippet) = world_meta
                 .biomes
                 .get(&position.biome)
-                .map(|b| format!("{} — {}", b.label, b.epithet))
-                .unwrap_or_else(|| "Unknown biome".to_string());
+                .map(|b| {
+                    let resource = b
+                        .resource_profile
+                        .first()
+                        .copied()
+                        .unwrap_or("General goods");
+                    let tension = b.tensions.first().copied().unwrap_or("Quiet watch");
+                    (
+                        format!("{} — {}", b.label, b.epithet),
+                        resource,
+                        tension,
+                        b.description,
+                    )
+                })
+                .unwrap_or_else(|| {
+                    (
+                        "Unknown biome".to_string(),
+                        "Unknown resource",
+                        "Unknown tension",
+                        "No records",
+                    )
+                });
 
             let faction_thread = world_meta
                 .faction_profile(identity.faction)
-                .map(|f| f.motto)
-                .unwrap_or("Unaligned motives");
+                .map(|f| {
+                    let vector = f
+                        .influence_vectors
+                        .first()
+                        .copied()
+                        .unwrap_or("Subtle influence");
+                    let stronghold = f
+                        .strongholds
+                        .first()
+                        .map(|biome| format!("{biome:?}"))
+                        .unwrap_or_else(|| "No stronghold".to_string());
+                    format!(
+                        "{} | Doctrine: {} | Lever: {} | Base: {}",
+                        f.motto, f.doctrine, vector, stronghold
+                    )
+                })
+                .unwrap_or_else(|| "Unaligned motives".to_string());
 
             format!(
-                "{} ({:?}) is {:?} within {} | Motto: {}",
-                identity.name, identity.faction, behavior.state, biome_summary, faction_thread
+                "{} ({:?}) is {:?} within {} | Focus: {} | Tension: {} | Atmosphere: {} | {}",
+                identity.name,
+                identity.faction,
+                behavior.state,
+                biome_summary,
+                resource_hint,
+                tension_hint,
+                description_snippet,
+                faction_thread
             )
         })
         .unwrap_or_else(|| "No entities present".to_string());
 
     info!(
         tick = time.tick,
-        epoch,
-        season,
-        catalyst,
-        circulation_stage,
-        stressor,
-        sample,
-        "world pulse"
+        epoch, season, catalyst, circulation_stage, stressor, sample, "world pulse"
     );
 }
