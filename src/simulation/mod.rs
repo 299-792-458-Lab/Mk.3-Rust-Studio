@@ -2,11 +2,15 @@ use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::Schedule;
 
 pub mod components;
+pub mod events;
+pub mod observer;
 pub mod resources;
 pub mod systems;
 pub mod world;
 
 pub use components::*;
+pub use events::*;
+pub use observer::*;
 pub use resources::*;
 pub use systems::*;
 pub use world::*;
@@ -22,6 +26,7 @@ impl SimulationWorld {
         world.insert_resource(config);
         world.insert_resource(WorldTime::default());
         world.insert_resource(WorldMetadata::default());
+        world.insert_resource(WorldEventLog::default());
 
         seed_entities(&mut world);
 
@@ -31,6 +36,7 @@ impl SimulationWorld {
                 ai_state_transition_system,
                 movement_and_combat_system,
                 economy_system,
+                event_generation_system,
                 logging_system,
             )
                 .chain(),
