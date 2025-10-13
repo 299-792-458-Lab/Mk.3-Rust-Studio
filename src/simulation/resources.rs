@@ -2,9 +2,10 @@
 
 use std::time::Duration;
 
+use bevy_ecs::prelude::Resource;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct SimulationConfig {
     pub tick_duration: Duration,
 }
@@ -17,7 +18,7 @@ impl Default for SimulationConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Resource, Serialize, Deserialize)]
 pub struct WorldTime {
     pub tick: u64,
 }
