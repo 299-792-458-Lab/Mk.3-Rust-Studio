@@ -4,10 +4,12 @@ use bevy_ecs::schedule::Schedule;
 pub mod components;
 pub mod resources;
 pub mod systems;
+pub mod world;
 
 pub use components::*;
 pub use resources::*;
 pub use systems::*;
+pub use world::*;
 
 pub struct SimulationWorld {
     world: World,
@@ -19,6 +21,7 @@ impl SimulationWorld {
         let mut world = World::default();
         world.insert_resource(config);
         world.insert_resource(WorldTime::default());
+        world.insert_resource(WorldMetadata::default());
 
         seed_entities(&mut world);
 
@@ -53,6 +56,8 @@ impl SimulationWorld {
 fn seed_entities(world: &mut World) {
     use BehaviorState::*;
 
+    let world_meta = world.resource::<WorldMetadata>().clone();
+
     let npc_templates = [
         (
             Identity {
@@ -60,11 +65,7 @@ fn seed_entities(world: &mut World) {
                 name: "Calix".to_string(),
                 faction: Faction::MerchantGuild,
             },
-            Position {
-                x: 0.0,
-                y: 0.0,
-                biome: Biome::Market,
-            },
+            world_meta.anchor_position(Biome::Market),
             Inventory {
                 items: vec![ItemStack {
                     item: ItemKind::Resource("Herbs".into()),
@@ -92,11 +93,7 @@ fn seed_entities(world: &mut World) {
                 name: "Rena".to_string(),
                 faction: Faction::BanditClans,
             },
-            Position {
-                x: 5.0,
-                y: 3.0,
-                biome: Biome::Forest,
-            },
+            world_meta.anchor_position(Biome::Forest),
             Inventory {
                 items: vec![ItemStack {
                     item: ItemKind::Equipment("Dagger".into()),
@@ -124,11 +121,7 @@ fn seed_entities(world: &mut World) {
                 name: "Aria".to_string(),
                 faction: Faction::ExplorersLeague,
             },
-            Position {
-                x: -2.0,
-                y: 4.0,
-                biome: Biome::Plains,
-            },
+            world_meta.anchor_position(Biome::Plains),
             Inventory {
                 items: vec![],
                 currency: 70.0,
@@ -146,6 +139,34 @@ fn seed_entities(world: &mut World) {
                 curious: 0.7,
             },
             Behavior { state: Gather },
+        ),
+        (
+            Identity {
+                id: 4,
+                name: "Lys".to_string(),
+                faction: Faction::TempleOfSuns,
+            },
+            world_meta.anchor_position(Biome::Village),
+            Inventory {
+                items: vec![ItemStack {
+                    item: ItemKind::Artifact("Sun Reliquary".into()),
+                    quantity: 1,
+                }],
+                currency: 30.0,
+            },
+            Attributes {
+                health: 90.0,
+                stamina: 70.0,
+                wealth: 50.0,
+                fame: 65.0,
+            },
+            Personality {
+                aggressive: 0.1,
+                cautious: 0.5,
+                social: 0.7,
+                curious: 0.6,
+            },
+            Behavior { state: Idle },
         ),
     ];
 

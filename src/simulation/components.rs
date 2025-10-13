@@ -10,13 +10,14 @@ pub struct Identity {
     pub faction: Faction,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Faction {
     Neutral,
     MerchantGuild,
     BanditClans,
     ExplorersLeague,
     SettlersUnion,
+    TempleOfSuns,
 }
 
 #[derive(Debug, Clone, Component, Serialize, Deserialize)]
@@ -27,20 +28,20 @@ pub struct Attributes {
     pub fame: f32,
 }
 
-#[derive(Debug, Clone, Copy, Component, Serialize, Deserialize)]
-pub struct Position {
-    pub x: f32,
-    pub y: f32,
-    pub biome: Biome,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Biome {
     Forest,
     Plains,
     Desert,
     Village,
     Market,
+}
+
+#[derive(Debug, Clone, Copy, Component, Serialize, Deserialize)]
+pub struct Position {
+    pub x: f32,
+    pub y: f32,
+    pub biome: Biome,
 }
 
 #[derive(Debug, Clone, Component, Serialize, Deserialize)]
@@ -70,7 +71,7 @@ pub struct Personality {
     pub curious: f32,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum BehaviorState {
     Idle,
     Explore,

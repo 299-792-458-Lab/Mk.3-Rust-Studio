@@ -144,18 +144,49 @@ All API calls are stateless, exposing a read-only observer interface.
 
 ## 10. World: TERA
 
-The simulated world TERA is divided into biomes: Forest, Plains, Desert, Village, Market. Each region maintains local resources, NPC density, and independent trade flow.
+TERA is an autonomous continent-scale simulation stitched from five interlocking biomes: Forest, Plains, Desert, Village, and Market. Each biome is both a physical region and a social-economic membrane that regulates who travels, what resources flow, and how factions project influence.
 
-### Economy
+### 10.1 Biome Profiles
 
-- Currency circulation between factions
-- Resource scarcity affects trade price
-- Randomized events: drought, invasion, market crash
+- **Forest (The Verdant Veil)**  
+  Dense canopies and hidden shrines. Produces herbs, timber, and rare fauna. Bandit enclaves and the Explorers’ League use the terrain for ambushes and discovery.
+- **Plains (Silverwind Expanse)**  
+  Open grasslands that enable caravans, large-scale farming, and mounted patrols. Farmers and hunter clans compete over migratory herds.
+- **Desert (Ashen Mirage)**  
+  Arid dunes masking ancient ruins. Mineral wealth and relics fuel high-risk expeditions by Explorers and opportunistic bandits. Survival hinges on water caches and nomadic guides.
+- **Village (Hearthbound Circuit)**  
+  Networked settlements with workshops, granaries, and communal halls. Primary hub for Farmers, Priests, and social reputation systems.
+- **Market (Golden Conflux)**  
+  Cosmopolitan trade nexus with auction floors and guild halls. Currency exchange rates, faction treaties, and economic shocks radiate outward from here.
 
-### Social Dynamics
+### 10.2 Faction Landscape
 
-- NPC reputation, faction alignment
-- Fame / Infamy metrics drive inter-faction relations
+- **Merchant Guild** maintains trade routes, price stabilization, and caravan security. Operates credit ledgers in Market and Plains.
+- **Bandit Clans** practice asymmetrical warfare, raiding convoys, and hoarding desert relics. Reputation driven by infamy.
+- **Explorers’ League** catalogs biomes, charts anomalies, and sells discovery rights. Strong curiosity modifiers and desert/forest specialization.
+- **Settlers’ Union** spans Village and Plains, coordinating crop cycles and civil projects. Reputation tied to communal prosperity.
+- **Temple of Suns** (Priest order) mediates social conflicts, curates relic lore, and offers health services across regions.
+
+Each faction controls influence vectors (trade tariff, military strength, or cultural sway) that feed into economy and social systems.
+
+### 10.3 Economy
+
+- Currency cycle: Market auctions → Merchant caravans → Village services → Desert expeditions → returns to Market. Scarcity shocks pivot around Desert relic yields and Plains harvest volumes.
+- Dynamic pricing: Resource scarcity modifies item prices using regional supply indices and faction tariff policies.
+- Randomized macro-events: drought (Plains & Village), invasion (Bandit surge), market crash (currency debasement), pilgrimage boon (Temple-led festivals), relic rush (Explorers’ discoveries).
+
+### 10.4 Social Dynamics
+
+- Reputation tiers: `Unknown`, `Noted`, `Renowned`, `Legendary`, `Infamous`.
+- Fame/Infamy cross-influences faction interactions; e.g., an Infamous bandit raises alarm levels in Market, increasing guard patrol frequency.
+- Social events include barter conclaves, peace councils, vendetta declarations, and pilgrimage processions. Outcomes shift faction alignments and local stability.
+
+### 10.5 Temporal Cadence
+
+- **Tick Epochs**: Daybreak (resource refresh), Highsun (trade volume peak), Nightfall (bandit aggression surge).
+- **Seasonal Modifiers**: three-season cycle (Bloomrise, Highflame, Emberfall) adjusts biome productivity and event likelihood.
+
+The simulation will encode these layers as structured metadata to drive systemic behaviors, ensuring world cohesion and emergent narrative density.
 
 ---
 
