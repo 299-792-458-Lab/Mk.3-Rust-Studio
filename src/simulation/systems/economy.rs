@@ -2,11 +2,11 @@
 
 use bevy_ecs::prelude::*;
 
-use crate::simulation::{BehaviorState, Inventory};
+use crate::simulation::{Behavior, BehaviorState, Inventory};
 
-pub fn economy_system(mut query: Query<(&BehaviorState, &mut Inventory)>) {
-    for (state, mut inventory) in &mut query {
-        if matches!(state, BehaviorState::Trade) {
+pub fn economy_system(mut query: Query<(&Behavior, &mut Inventory)>) {
+    for (behavior, mut inventory) in &mut query {
+        if matches!(behavior.state, BehaviorState::Trade) {
             inventory.currency += 5.0;
         }
     }

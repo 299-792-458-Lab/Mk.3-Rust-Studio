@@ -23,12 +23,15 @@ impl SimulationWorld {
         seed_entities(&mut world);
 
         let mut schedule = Schedule::default();
-        schedule.add_systems((
-            ai_state_transition_system,
-            movement_and_combat_system,
-            economy_system,
-            logging_system,
-        ));
+        schedule.add_systems(
+            (
+                ai_state_transition_system,
+                movement_and_combat_system,
+                economy_system,
+                logging_system,
+            )
+                .chain(),
+        );
 
         Self { world, schedule }
     }
@@ -40,6 +43,10 @@ impl SimulationWorld {
         }
 
         self.schedule.run(&mut self.world);
+    }
+
+    pub fn tick_count(&self) -> u64 {
+        self.world.resource::<WorldTime>().tick
     }
 }
 
