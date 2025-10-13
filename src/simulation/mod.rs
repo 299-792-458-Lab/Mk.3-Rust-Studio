@@ -38,6 +38,7 @@ impl SimulationWorld {
         let mut world = World::default();
         world.insert_resource(config);
         world.insert_resource(WorldTime::default());
+        world.insert_resource(WorldMetrics::default());
         world.insert_resource(WorldMetadata::default());
         world.insert_resource(WorldEventLog::default());
 
@@ -75,6 +76,8 @@ impl SimulationWorld {
     fn refresh_observer_snapshot(&mut self) {
         let tick = self.world.resource::<WorldTime>().tick;
         let world_meta = self.world.resource::<WorldMetadata>().clone();
+        let metrics = self.world.resource::<WorldMetrics>();
+
         let (epoch, season) = {
             let (epoch, season) = world_meta.epoch_for_tick(tick);
             (epoch.to_string(), season.to_string())
@@ -113,7 +116,7 @@ impl SimulationWorld {
             .collect::<Vec<_>>();
 
         if let Ok(mut snapshot) = self.observer.write() {
-            snapshot.update(tick, epoch, season, entities, events);
+            snapshot.update(tick, epoch, season, metrics, entities, events);
         }
     }
 }

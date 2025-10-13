@@ -108,32 +108,16 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
     let total_entities = snapshot.entities.len();
     let tick = snapshot.tick;
 
-    // Calculate metrics
-    let avg_wealth = if total_entities > 0 {
-        snapshot.entities.iter().map(|e| e.wealth).sum::<f32>() / total_entities as f32
-    } else {
-        0.0
-    };
-
-    let avg_fame = if total_entities > 0 {
-        snapshot.entities.iter().map(|e| e.fame).sum::<f32>() / total_entities as f32
-    } else {
-        0.0
-    };
-
-    // Placeholder for security
-    let security = 75.0;
-
     let world_state_lines = vec![
         Line::from(format!("Total Entities: {}", total_entities)),
         Line::from(format!("Tick: {}", tick)),
         Line::from(""),
         Line::from(Span::styled("경제", Style::default().bold())),
-        create_bar(avg_wealth, 100.0, 20),
+        create_bar(snapshot.economy, 100.0, 20),
         Line::from(Span::styled("만족도", Style::default().bold())),
-        create_bar(avg_fame, 100.0, 20),
+        create_bar(snapshot.satisfaction, 100.0, 20),
         Line::from(Span::styled("치안", Style::default().bold())),
-        create_bar(security, 100.0, 20),
+        create_bar(snapshot.security, 100.0, 20),
         Line::from(""),
         Line::from(Span::styled("Tick Speed", Style::default().bold())),
         Line::from(format!("{} ms/tick", tick_duration.as_millis())),
@@ -150,41 +134,7 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
 
     Paragraph::new(world_state_lines)
         .block(Block::default().title("World State").borders(Borders::ALL))
-}
-    let total_entities = snapshot.entities.len();
-    let tick = snapshot.tick;
 
-    // Calculate metrics
-    let avg_wealth = if total_entities > 0 {
-        snapshot.entities.iter().map(|e| e.wealth).sum::<f32>() / total_entities as f32
-    } else {
-        0.0
-    };
-
-    let avg_fame = if total_entities > 0 {
-        snapshot.entities.iter().map(|e| e.fame).sum::<f32>() / total_entities as f32
-    } else {
-        0.0
-    };
-
-    // Placeholder for security
-    let security = 75.0;
-
-    let world_state_lines = vec![
-        Line::from(format!("Total Entities: {}", total_entities)),
-        Line::from(format!("Tick: {}", tick)),
-        Line::from(""),
-        Line::from(Span::styled("경제", Style::default().bold())),
-        create_bar(avg_wealth, 100.0, 20),
-        Line::from(Span::styled("만족도", Style::default().bold())),
-        create_bar(avg_fame, 100.0, 20),
-        Line::from(Span::styled("치안", Style::default().bold())),
-        create_bar(security, 100.0, 20),
-    ];
-
-    Paragraph::new(world_state_lines)
-        .block(Block::default().title("World State").borders(Borders::ALL))
-}
 
 fn create_bar(value: f32, max_value: f32, max_width: usize) -> Line<'static> {
     let percentage = (value / max_value).clamp(0.0, 1.0);

@@ -40,10 +40,16 @@ fn upkeep_penalty(base: f32, upkeep: f32) -> f32 {
 
 pub fn economy_system(
     mut query: Query<(&Identity, &Position, &Behavior, &mut Inventory)>,
+    mut metrics: ResMut<WorldMetrics>,
     world_meta: Res<WorldMetadata>,
     time: Res<WorldTime>,
 ) {
     let (segment, season) = world_meta.epoch_for_tick(time.tick);
+
+    // Apply a decay factor to metrics
+    metrics.economy *= 0.999;
+    metrics.satisfaction *= 0.998;
+    metrics.security *= 0.999;
 
     for (identity, position, behavior, mut inventory) in &mut query {
         let biome = position.biome;
@@ -75,6 +81,13 @@ pub fn economy_system(
                 base_trade_yield * trade_multiplier - upkeep_penalty(0.75, upkeep) + volatility;
             inventory.currency =
                 (inventory.currency + trade_gain.max(-inventory.currency)).max(0.0);
+
+            // Update world metrics
+            metrics.economy += trade_gain * 0.05;
+            if trade_gain > 0.0 {
+                metrics.satisfaction += trade_gain * 0.02;
+            }
+            metrics.security -= risk_factor * 0.01; // Trade can be risky
         }
 
         if matches!(behavior.state, BehaviorState::Gather) {
@@ -82,6 +95,15 @@ pub fn economy_system(
                 - upkeep_penalty(0.35, upkeep)
                 + rng.gen_range(0.0..2.0);
             inventory.currency += gather_gain.max(0.0);
+
+            // Update world metrics
+            metrics.economy += gather_gain * 0.03;
+            metrics.satisfaction += gather_gain * 0.01;
         }
     }
+
+    // Clamp metrics to 0-100 range
+    metrics.economy = metrics.economy.clamp(0.0, 100.0);
+    metrics.satisfaction = metrics.satisfaction.clamp(0.0, 100.0);
+    metrics.security = metrics.security.clamp(0.0, 100.0);
 }
