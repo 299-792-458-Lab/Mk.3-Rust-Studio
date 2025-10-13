@@ -25,14 +25,24 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
         main_layout[0],
     );
 
-    // Inner layout for content - Adjusted panel widths
-    let inner_layout = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+    // Create a vertical layout for the main content area
+    let content_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
         .split(main_layout[1]);
 
+    // Top layout for world state and map
+    let top_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+        .split(content_layout[0]);
+
     // World State Panel
-    frame.render_widget(render_world_state_panel(snapshot, tick_duration), inner_layout[0]);
+    frame.render_widget(render_world_state_panel(snapshot, tick_duration), top_layout[0]);
+
+    // Map Widget
+    let map_widget = MapWidget { grid: &snapshot.grid };
+    frame.render_widget(map_widget, top_layout[1]);
 
     // Event Log Panel - Using a Table for alignment
     let header_cells = [
@@ -102,7 +112,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     .header(header)
     .block(Block::default().title("Event Log").borders(Borders::ALL));
 
-    frame.render_widget(table, inner_layout[1]);
+    frame.render_widget(table, content_layout[1]);
 }
 
 fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration) -> Paragraph {
