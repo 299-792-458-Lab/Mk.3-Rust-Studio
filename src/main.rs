@@ -8,7 +8,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{prelude::*, Terminal};
-use tokio::sync::Notify;
+use tokio::sync::{watch, Notify};
 
 mod simulation;
 mod ui;
@@ -22,7 +22,9 @@ async fn main() -> anyhow::Result<()> {
         tick_duration: Duration::from_secs(1),
         ..Default::default()
     };
-    let tick_duration = config.tick_duration;
+    let initial_tick_duration = config.tick_duration;
+
+    let (tick_duration_tx, mut tick_duration_rx) = watch::channel(initial_tick_duration);
 
     let observer = Arc::new(RwLock::new(ObserverSnapshot::default()));
     let shutdown_notify = Arc::new(Notify::new());
@@ -30,10 +32,19 @@ async fn main() -> anyhow::Result<()> {
     let mut simulation = SimulationWorld::with_observer(config, observer.clone());
     let notify_for_simulation = shutdown_notify.clone();
     let simulation_task = tokio::spawn(async move {
-        let mut interval = tokio::time::interval(tick_duration);
+        let mut interval = tokio::time::interval(*tick_duration_rx.borrow());
         loop {
             tokio::select! {
                 _ = interval.tick() => simulation.tick(),
+                result = tick_duration_rx.changed() => {
+                    if result.is_ok() {
+                        let new_duration = *tick_duration_rx.borrow();
+                        interval = tokio::time::interval(new_duration);
+                    } else {
+                        // Channel closed, time to shut down
+                        break;
+                    }
+                },
                 _ = notify_for_simulation.notified() => break,
             }
         }
@@ -51,8 +62,22 @@ async fn main() -> anyhow::Result<()> {
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('q') {
-                    app_should_run = false;
+                match key.code {
+                    KeyCode::Char('q') => app_should_run = false,
+                    KeyCode::Char('+') | KeyCode::Char('=') => {
+                        let current_duration = *tick_duration_tx.borrow();
+                        let new_duration = current_duration / 2;
+                        tick_duration_tx.send(new_duration).ok(); // Ignore error if receiver is dropped
+                    }
+                    KeyCode::Char('-') => {
+                        let current_duration = *tick_duration_tx.borrow();
+                        let new_duration = current_duration * 2;
+                        tick_duration_tx.send(new_duration).ok();
+                    }
+                    KeyCode::Char('r') => {
+                        tick_duration_tx.send(initial_tick_duration).ok();
+                    }
+                    _ => {}
                 }
             }
         }

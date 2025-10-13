@@ -122,24 +122,45 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot) -> Paragraph {
     // Placeholder for security
     let security = 75.0;
 
-    // Create bar graphs
-    let max_bar_width = 20;
-    let wealth_bar = "█".repeat(((avg_wealth / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
-    let fame_bar = "█".repeat(((avg_fame / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
-    let security_bar = "█".repeat(((security / 100.0) * max_bar_width as f32).clamp(0.0, max_bar_width as f32) as usize);
-
-    let world_state_text = vec![
+    let world_state_lines = vec![
         Line::from(format!("Total Entities: {}", total_entities)),
         Line::from(format!("Tick: {}", tick)),
         Line::from(""),
         Line::from(Span::styled("경제", Style::default().bold())),
-        Line::from(format!("[{:<20}] {:.1}%", wealth_bar, avg_wealth)),
+        create_bar(avg_wealth, 100.0, 20),
         Line::from(Span::styled("만족도", Style::default().bold())),
-        Line::from(format!("[{:<20}] {:.1}%", fame_bar, avg_fame)),
+        create_bar(avg_fame, 100.0, 20),
         Line::from(Span::styled("치안", Style::default().bold())),
-        Line::from(format!("[{:<20}] {:.1}%", security_bar, security)),
+        create_bar(security, 100.0, 20),
     ];
 
-    Paragraph::new(world_state_text)
+    Paragraph::new(world_state_lines)
         .block(Block::default().title("World State").borders(Borders::ALL))
+}
+
+fn create_bar(value: f32, max_value: f32, max_width: usize) -> Line<'static> {
+    let percentage = (value / max_value).clamp(0.0, 1.0);
+    let width = (percentage * max_width as f32) as usize;
+    let bar_text = "█".repeat(width);
+    let padding = " ".repeat(max_width - width);
+
+    let color = if percentage > 0.66 {
+        Color::Green
+    } else if percentage > 0.33 {
+        Color::Yellow
+    } else {
+        Color::Red
+    };
+
+    let bar_span = Span::styled(bar_text, Style::default().fg(color));
+    let padding_span = Span::raw(padding);
+    let text_span = Span::from(format!(" {:.1}%", percentage * 100.0));
+
+    Line::from(vec![
+        Span::raw("["),
+        bar_span,
+        padding_span,
+        Span::raw("]"),
+        text_span,
+    ])
 }
