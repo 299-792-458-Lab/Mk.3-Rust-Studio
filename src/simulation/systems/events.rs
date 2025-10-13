@@ -58,7 +58,7 @@ pub fn event_generation_system(
                     )
                 }
             })
-            .unwrap_or_else(|| "General commodities".to_string());
+            .unwrap_or_else(|| "일반 교역품".to_string());
 
         let pressure = world_meta
             .faction_profile(identity.faction)
@@ -72,7 +72,7 @@ pub fn event_generation_system(
                     )
                 }
             })
-            .unwrap_or_else(|| "Local demand feedback".to_string());
+            .unwrap_or_else(|| "지역 수요 지표".to_string());
 
         let actor = EventActor {
             id: identity.id,
@@ -82,14 +82,12 @@ pub fn event_generation_system(
             behavior_hint: behavior_state,
         };
 
+        let market_label = biome_profile
+            .map(|meta| meta.label)
+            .unwrap_or("미확인 교역장");
         let trade_summary = format!(
-            "{} brokers {} flows in {} (liquidity {:.1})",
-            actor.name,
-            focus,
-            biome_profile
-                .map(|meta| meta.label)
-                .unwrap_or("Unknown exchange"),
-            currency
+            "{} 님이 {} 흐름을 {}에서 조율합니다 (유동성 {:.1})",
+            actor.name, focus, market_label, currency
         );
 
         event_log.push(WorldEvent::trade(
@@ -136,16 +134,16 @@ pub fn event_generation_system(
                     Some(meta.tensions[rng.gen_range(0..meta.tensions.len())].to_string())
                 }
             })
-            .unwrap_or_else(|| "Shared stories".to_string());
+            .unwrap_or_else(|| "이야기 나눔".to_string());
 
         let cohesion_level = if attributes.fame >= 60.0 {
-            "Legendary draw"
+            "전설급 호응"
         } else if attributes.fame >= 35.0 {
-            "Strong turnout"
+            "성황"
         } else if attributes.fame >= 15.0 {
-            "Modest gathering"
+            "소박한 모임"
         } else {
-            "Intimate circle"
+            "소수 친교"
         }
         .to_string();
 
@@ -180,7 +178,7 @@ pub fn event_generation_system(
             circulation[(tick as usize + catalysts.len()) % circulation.len()].to_string();
 
         let impact = format!(
-            "{} strains {} while {} is underway",
+            "{} 위기가 {}을(를) 압박하며 {} 단계가 진행 중입니다",
             stressor, catalyst, circulation_stage
         );
 
