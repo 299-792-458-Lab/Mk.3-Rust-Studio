@@ -1,8 +1,10 @@
+use crate::simulation::events::{Sentiment, WorldEventKind};
 use crate::simulation::ObserverSnapshot;
-use ratatui::
-{
+use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, Paragraph},
+    style::Stylize,
+    text::{Line, Span},
+    widgets::{Block, Borders, Cell, Paragraph, Row, Table},
 };
 
 pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
@@ -20,10 +22,10 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
         main_layout[0],
     );
 
-    // Inner layout for content
+    // Inner layout for content - Adjusted panel widths
     let inner_layout = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
+        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
         .split(main_layout[1]);
 
     // World State Panel
@@ -36,16 +38,73 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot) {
         .block(Block::default().title("World State").borders(Borders::ALL));
     frame.render_widget(state_widget, inner_layout[0]);
 
-    // Event Log Panel
-    let events: Vec<String> = snapshot
+    // Event Log Panel - Using a Table for alignment
+    let header_cells = [
+        "Tick",
+        "Category",
+        "Actor/Source",
+        "Details",
+        "Impact/Level",
+    ]
+    .iter()
+    .map(|h| Cell::from(*h).style(Style::default().fg(Color::White).bold()));
+    let header = Row::new(header_cells).height(1).bottom_margin(1);
+
+    let rows: Vec<Row> = snapshot
         .events
         .iter()
-        .rev() // Show latest events at the top
-        .take(20) // Limit number of events shown
-        .map(|e| format!("{:?}", e))
+        .rev()
+        .take(20)
+        .map(|event| {
+            let color = match event.sentiment() {
+                Sentiment::Positive => Color::Green,
+                Sentiment::Neutral => Color::Yellow,
+                Sentiment::Negative => Color::Red,
+            };
+            let style = Style::default().fg(color);
+
+            let (actor, details, impact) = match &event.kind {
+                WorldEventKind::Trade { actor, trade_focus, market_pressure } => (
+                    actor.name.clone(),
+                    trade_focus.clone(),
+                    market_pressure.clone(),
+                ),
+                WorldEventKind::Social { convener, gathering_theme, cohesion_level } => (
+                    convener.name.clone(),
+                    gathering_theme.clone(),
+                    cohesion_level.clone(),
+                ),
+                WorldEventKind::MacroShock { stressor, catalyst, projected_impact } => (
+                    stressor.clone(),
+                    catalyst.clone(),
+                    projected_impact.clone(),
+                ),
+            };
+
+            let cells = vec![
+                Cell::from(event.tick.to_string()),
+                Cell::from(event.category()),
+                Cell::from(actor),
+                Cell::from(details),
+                Cell::from(impact),
+            ];
+
+            Row::new(cells).height(1).style(style)
+        })
         .collect();
 
-    let event_log = Paragraph::new(events.join("\n"))
-        .block(Block::default().title("Event Log").borders(Borders::ALL));
-    frame.render_widget(event_log, inner_layout[1]);
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(5),
+            Constraint::Length(10),
+            Constraint::Length(15),
+            Constraint::Min(20),
+            Constraint::Length(15),
+        ],
+    )
+    .header(header)
+    .block(Block::default().title("Event Log").borders(Borders::ALL));
+
+    frame.render_widget(table, inner_layout[1]);
 }
