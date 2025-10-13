@@ -5,27 +5,29 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use crate::simulation::{
-    Attributes, Behavior, BehaviorState, EventActor, Inventory, Position, WorldEvent, WorldEventLog,
-    WorldMetadata, WorldTime,
+    Attributes, Behavior, BehaviorState, EventActor, Inventory, Position, WorldEvent,
+    WorldEventLog, WorldMetadata, WorldTime,
 };
 
 pub fn event_generation_system(
     time: Res<WorldTime>,
     world_meta: Res<WorldMetadata>,
     mut event_log: ResMut<WorldEventLog>,
-    query: Query<(&crate::simulation::Identity, &Behavior, &Position, &Inventory, &Attributes)>,
+    query: Query<(
+        &crate::simulation::Identity,
+        &Behavior,
+        &Position,
+        &Inventory,
+        &Attributes,
+    )>,
 ) {
     let tick = time.tick;
     let (epoch, season) = world_meta.epoch_for_tick(tick);
     let mut rng = SmallRng::seed_from_u64(tick.wrapping_mul(421) + 17);
 
     // Trade event sampling
-    let mut trade_choice: Option<(
-        crate::simulation::Identity,
-        Position,
-        f32,
-        BehaviorState,
-    )> = None;
+    let mut trade_choice: Option<(crate::simulation::Identity, Position, f32, BehaviorState)> =
+        None;
     let mut trade_count = 0;
 
     for (identity, behavior, position, inventory, _) in &query {
@@ -34,7 +36,12 @@ pub fn event_generation_system(
         }
         trade_count += 1;
         if rng.gen_range(0..trade_count) == 0 {
-            trade_choice = Some(((*identity).clone(), *position, inventory.currency, behavior.state));
+            trade_choice = Some((
+                (*identity).clone(),
+                *position,
+                inventory.currency,
+                behavior.state,
+            ));
         }
     }
 
@@ -110,7 +117,12 @@ pub fn event_generation_system(
         }
         social_count += 1;
         if rng.gen_range(0..social_count) == 0 {
-            social_choice = Some(((*identity).clone(), *position, (*attributes).clone(), behavior.state));
+            social_choice = Some((
+                (*identity).clone(),
+                *position,
+                (*attributes).clone(),
+                behavior.state,
+            ));
         }
     }
 
@@ -121,10 +133,7 @@ pub fn event_generation_system(
                 if meta.tensions.is_empty() {
                     None
                 } else {
-                    Some(
-                        meta.tensions[rng.gen_range(0..meta.tensions.len())]
-                            .to_string(),
-                    )
+                    Some(meta.tensions[rng.gen_range(0..meta.tensions.len())].to_string())
                 }
             })
             .unwrap_or_else(|| "Shared stories".to_string());
@@ -176,12 +185,7 @@ pub fn event_generation_system(
         );
 
         event_log.push(WorldEvent::macro_shock(
-            tick,
-            epoch,
-            season,
-            stressor,
-            catalyst,
-            impact,
+            tick, epoch, season, stressor, catalyst, impact,
         ));
     }
 }

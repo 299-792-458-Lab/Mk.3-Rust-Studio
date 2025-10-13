@@ -24,6 +24,7 @@ pub struct SimulationWorld {
 }
 
 impl SimulationWorld {
+    #[allow(dead_code)]
     pub fn new(config: SimulationConfig) -> Self {
         Self::with_observer(config, Arc::new(RwLock::new(ObserverSnapshot::default())))
     }
@@ -47,10 +48,10 @@ impl SimulationWorld {
                 movement_and_combat_system,
                 economy_system,
                 event_generation_system,
-            logging_system,
-        )
-            .chain(),
-    );
+                logging_system,
+            )
+                .chain(),
+        );
 
         Self {
             world,
@@ -69,14 +70,6 @@ impl SimulationWorld {
         self.refresh_observer_snapshot();
     }
 
-    pub fn tick_count(&self) -> u64 {
-        self.world.resource::<WorldTime>().tick
-    }
-
-    pub fn observer_handle(&self) -> Arc<RwLock<ObserverSnapshot>> {
-        Arc::clone(&self.observer)
-    }
-
     fn refresh_observer_snapshot(&mut self) {
         let tick = self.world.resource::<WorldTime>().tick;
         let (epoch, season) = {
@@ -90,26 +83,24 @@ impl SimulationWorld {
             log.snapshot()
         };
 
-        let mut entity_query = self.world.query::<(
-            &Identity,
-            &Position,
-            &Behavior,
-            &Inventory,
-            &Attributes,
-        )>();
+        let mut entity_query = self
+            .world
+            .query::<(&Identity, &Position, &Behavior, &Inventory, &Attributes)>();
 
         let entities = entity_query
             .iter(&self.world)
-            .map(|(identity, position, behavior, inventory, attributes)| EntitySnapshot {
-                id: identity.id,
-                name: identity.name.clone(),
-                faction: identity.faction,
-                biome: position.biome,
-                behavior: behavior.state,
-                currency: inventory.currency,
-                wealth: attributes.wealth,
-                fame: attributes.fame,
-            })
+            .map(
+                |(identity, position, behavior, inventory, attributes)| EntitySnapshot {
+                    id: identity.id,
+                    name: identity.name.clone(),
+                    faction: identity.faction,
+                    biome: position.biome,
+                    behavior: behavior.state,
+                    currency: inventory.currency,
+                    wealth: attributes.wealth,
+                    fame: attributes.fame,
+                },
+            )
             .collect::<Vec<_>>();
 
         if let Ok(mut snapshot) = self.observer.write() {

@@ -55,10 +55,10 @@ pub fn economy_system(
             * world_meta.faction_trade_yield(faction)
             * season_trade_modifier(season)
             * segment_trade_modifier(segment);
-        let resource_multiplier = world_meta.biome_resource_abundance(biome)
-            * season_gather_modifier(season);
-        let risk_factor = world_meta.biome_risk_factor(biome)
-            / world_meta.faction_volatility_resistance(faction);
+        let resource_multiplier =
+            world_meta.biome_resource_abundance(biome) * season_gather_modifier(season);
+        let risk_factor =
+            world_meta.biome_risk_factor(biome) / world_meta.faction_volatility_resistance(faction);
 
         let upkeep = world_meta.faction_upkeep_burden(faction);
 
@@ -73,7 +73,8 @@ pub fn economy_system(
             let volatility: f32 = rng.gen_range(-2.0..2.0) * risk_factor;
             let trade_gain =
                 base_trade_yield * trade_multiplier - upkeep_penalty(0.75, upkeep) + volatility;
-            inventory.currency = (inventory.currency + trade_gain.max(-inventory.currency)).max(0.0);
+            inventory.currency =
+                (inventory.currency + trade_gain.max(-inventory.currency)).max(0.0);
         }
 
         if matches!(behavior.state, BehaviorState::Gather) {
