@@ -76,7 +76,6 @@ impl SimulationWorld {
     fn refresh_observer_snapshot(&mut self) {
         let tick = self.world.resource::<WorldTime>().tick;
         let world_meta = self.world.resource::<WorldMetadata>().clone();
-        let metrics = self.world.resource::<WorldMetrics>();
 
         let (epoch, season) = {
             let (epoch, season) = world_meta.epoch_for_tick(tick);
@@ -114,6 +113,8 @@ impl SimulationWorld {
                 },
             )
             .collect::<Vec<_>>();
+
+        let metrics = self.world.resource::<WorldMetrics>();
 
         if let Ok(mut snapshot) = self.observer.write() {
             snapshot.update(tick, epoch, season, metrics, entities, events);
