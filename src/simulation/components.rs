@@ -1,7 +1,7 @@
+//! Entity component definitions for the TERA simulation.
+
 use bevy_ecs::prelude::Component;
 use serde::{Deserialize, Serialize};
-
-//! Entity component definitions for the TERA simulation.
 
 #[derive(Debug, Clone, Component, Serialize, Deserialize)]
 pub struct Identity {
