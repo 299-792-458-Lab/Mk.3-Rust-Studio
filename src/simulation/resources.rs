@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use crate::simulation::Nation;
 use bevy_ecs::prelude::Resource;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Resource)]
@@ -29,7 +30,7 @@ impl Default for NationMetrics {
     }
 }
 
-#[derive(Debug, Resource)]
+#[derive(Debug, Resource, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AllNationMetrics(pub HashMap<Nation, NationMetrics>);
 
 impl Default for AllNationMetrics {
@@ -50,8 +51,6 @@ impl Default for DeltaTime {
         Self(1.0)
     }
 }
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Resource)]
 pub struct SimulationConfig {

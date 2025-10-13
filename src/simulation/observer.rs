@@ -18,7 +18,7 @@ pub struct EntitySnapshot {
     pub fame: f32,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ObserverSnapshot {
     pub tick: u64,
     pub epoch: String,

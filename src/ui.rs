@@ -1,4 +1,5 @@
 use crate::simulation::events::{Sentiment, WorldEventKind};
+use crate::simulation::grid::HexGrid;
 use crate::simulation::{Nation, NationMetrics, ObserverSnapshot};
 use ratatui::{
     prelude::*,
