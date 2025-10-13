@@ -5,6 +5,7 @@ use bevy_ecs::schedule::Schedule;
 
 pub mod components;
 pub mod events;
+pub mod grid;
 pub mod localization;
 pub mod nation;
 pub mod observer;
@@ -14,6 +15,7 @@ pub mod world;
 
 pub use components::*;
 pub use events::*;
+pub use grid::*;
 pub use localization::*;
 pub use nation::*;
 pub use observer::*;
@@ -52,6 +54,7 @@ impl SimulationWorld {
                 ai_state_transition_system,
                 movement_and_combat_system,
                 economy_system,
+                warfare_system,
                 event_generation_system,
                 logging_system,
             )
