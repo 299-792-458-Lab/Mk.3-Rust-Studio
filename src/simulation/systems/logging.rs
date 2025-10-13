@@ -141,9 +141,8 @@ fn format_sample_line(
         behavior_color(behavior.state),
     );
 
-    let biome_label = world_meta
-        .biomes
-        .get(&position.biome)
+    let biome_meta = world_meta.biomes.get(&position.biome);
+    let biome_label = biome_meta
         .map(|b| b.label.to_string())
         .unwrap_or_else(|| format!("{:?}", position.biome));
     let biome_badge = badge(&biome_label, Color::BrightBlue);
@@ -153,10 +152,42 @@ fn format_sample_line(
         .bold()
         .to_string();
 
-    format!(
+    let mut line = format!(
         "{} {} {} {} {} {} 의 현재 상태를 관측 중",
         category_badge, sentiment_badge, faction_badge, behavior_badge, biome_badge, entity_name,
-    )
+    );
+
+    if let Some(meta) = biome_meta {
+        let epithet_badge = badge(meta.epithet, Color::BrightBlue);
+        let description = meta.description.color(Color::BrightBlack).to_string();
+        line.push_str(&format!(" | {} {}", epithet_badge, description));
+    }
+
+    if let Some(faction_meta) = world_meta.faction_profile(identity.faction) {
+        let motto_badge = badge(faction_meta.motto, Color::BrightYellow);
+        let doctrine_badge = badge(faction_meta.doctrine, Color::Yellow);
+
+        line.push_str(&format!(" | {} {}", motto_badge, doctrine_badge));
+
+        if !faction_meta.strongholds.is_empty() {
+            let stronghold_names = faction_meta
+                .strongholds
+                .iter()
+                .map(|biome| {
+                    world_meta
+                        .biomes
+                        .get(biome)
+                        .map(|b| b.label)
+                        .unwrap_or("미확인 거점")
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            let stronghold_badge = badge(&format!("거점 {}", stronghold_names), Color::BrightGreen);
+            line.push_str(&format!(" | {}", stronghold_badge));
+        }
+    }
+
+    line
 }
 
 pub fn logging_system(
