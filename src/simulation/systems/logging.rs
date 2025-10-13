@@ -1,22 +1,168 @@
-//! Event logging placeholder system with world metadata narrative hooks.
+//! Colorized world pulse logging for quick CLI scanning.
 
 use bevy_ecs::prelude::*;
+use colored::{Color, Colorize};
 use tracing::info;
 
 use crate::simulation::{
-    Behavior, Biome, Identity, Position, WorldMetadata, WorldTime, behavior_label, faction_label,
+    Behavior, Identity, Position, Sentiment, WorldEvent, WorldEventLog, WorldMetadata, WorldTime,
+    behavior_color, behavior_label, faction_color, faction_label, sentiment_color, sentiment_label,
 };
 
-fn biome_label(meta: &WorldMetadata, biome: Biome) -> String {
-    meta.biomes
-        .get(&biome)
+fn badge(label: &str, color: Color) -> String {
+    format!("[{}]", label).color(color).to_string()
+}
+
+fn category_color(category: &str) -> Color {
+    match category {
+        "무역" => Color::BrightCyan,
+        "사회" => Color::BrightMagenta,
+        "거시충격" => Color::BrightRed,
+        _ => Color::White,
+    }
+}
+
+fn sentiment_tag(sentiment: Sentiment) -> String {
+    badge(sentiment_label(sentiment), sentiment_color(sentiment))
+}
+
+fn format_event_line(event: &WorldEvent) -> String {
+    let category_badge = badge(event.category(), category_color(event.category()));
+    let sentiment_badge = sentiment_tag(event.sentiment());
+    let tick_badge = badge(&format!("Tick {}", event.tick), Color::BrightBlack);
+    let season_badge = badge(&event.season, Color::BrightBlue);
+    let epoch_badge = badge(&event.epoch, Color::BrightCyan);
+
+    match &event.kind {
+        crate::simulation::WorldEventKind::Trade {
+            actor,
+            trade_focus,
+            market_pressure,
+        } => {
+            let faction_badge = badge(&actor.faction_label, faction_color(actor.faction));
+            let behavior_badge = badge(
+                &actor.behavior_hint_label,
+                behavior_color(actor.behavior_hint),
+            );
+            let actor_name = actor
+                .name
+                .color(faction_color(actor.faction))
+                .bold()
+                .to_string();
+            let focus = trade_focus.color(Color::BrightCyan).to_string();
+            let pressure = market_pressure.color(Color::Yellow).to_string();
+
+            format!(
+                "{} {} {} {} {} {} {} {} 님이 {} 거래를 주도합니다 | 압력: {}",
+                category_badge,
+                sentiment_badge,
+                tick_badge,
+                epoch_badge,
+                season_badge,
+                faction_badge,
+                behavior_badge,
+                actor_name,
+                focus,
+                pressure
+            )
+        }
+        crate::simulation::WorldEventKind::Social {
+            convener,
+            gathering_theme,
+            cohesion_level,
+        } => {
+            let faction_badge = badge(&convener.faction_label, faction_color(convener.faction));
+            let behavior_badge = badge(
+                &convener.behavior_hint_label,
+                behavior_color(convener.behavior_hint),
+            );
+            let convener_name = convener
+                .name
+                .color(faction_color(convener.faction))
+                .bold()
+                .to_string();
+            let theme = format!("\"{}\"", gathering_theme)
+                .color(Color::BrightMagenta)
+                .to_string();
+            let cohesion = cohesion_level.color(Color::BrightGreen).to_string();
+
+            format!(
+                "{} {} {} {} {} {} {} {} 님이 {} 주제로 모임을 엽니다 | 응집도: {}",
+                category_badge,
+                sentiment_badge,
+                tick_badge,
+                epoch_badge,
+                season_badge,
+                faction_badge,
+                behavior_badge,
+                convener_name,
+                theme,
+                cohesion
+            )
+        }
+        crate::simulation::WorldEventKind::MacroShock {
+            stressor,
+            catalyst,
+            projected_impact,
+        } => {
+            let stress = stressor.color(Color::BrightRed).bold().to_string();
+            let catalyst = catalyst.color(Color::Yellow).to_string();
+            let impact = projected_impact.color(Color::White).to_string();
+
+            format!(
+                "{} {} {} {} {} {} | 촉발: {} | 영향: {}",
+                category_badge,
+                sentiment_badge,
+                tick_badge,
+                epoch_badge,
+                season_badge,
+                stress,
+                catalyst,
+                impact
+            )
+        }
+    }
+}
+
+fn format_sample_line(
+    world_meta: &WorldMetadata,
+    identity: &Identity,
+    behavior: &Behavior,
+    position: &Position,
+) -> String {
+    let sentiment_badge = sentiment_tag(Sentiment::Neutral);
+    let category_badge = badge("상황", Color::BrightWhite);
+    let faction_badge = badge(
+        faction_label(identity.faction),
+        faction_color(identity.faction),
+    );
+    let behavior_badge = badge(
+        behavior_label(behavior.state),
+        behavior_color(behavior.state),
+    );
+
+    let biome_label = world_meta
+        .biomes
+        .get(&position.biome)
         .map(|b| b.label.to_string())
-        .unwrap_or_else(|| format!("{biome:?}"))
+        .unwrap_or_else(|| format!("{:?}", position.biome));
+    let biome_badge = badge(&biome_label, Color::BrightBlue);
+    let entity_name = identity
+        .name
+        .color(faction_color(identity.faction))
+        .bold()
+        .to_string();
+
+    format!(
+        "{} {} {} {} {} {} 의 현재 상태를 관측 중",
+        category_badge, sentiment_badge, faction_badge, behavior_badge, biome_badge, entity_name,
+    )
 }
 
 pub fn logging_system(
     time: Res<WorldTime>,
     world_meta: Res<WorldMetadata>,
+    events: Res<WorldEventLog>,
     query: Query<(&Identity, &Behavior, &Position)>,
 ) {
     let (epoch, season) = world_meta.epoch_for_tick(time.tick);
@@ -35,72 +181,55 @@ pub fn logging_system(
         .copied()
         .unwrap_or("안정 국면");
 
-    let sample = query
-        .iter()
-        .next()
-        .map(|(identity, behavior, position)| {
-            let (biome_summary, resource_hint, tension_hint, description_snippet) = world_meta
-                .biomes
-                .get(&position.biome)
-                .map(|b| {
-                    let resource = b
-                        .resource_profile
-                        .first()
-                        .copied()
-                        .unwrap_or("일반 물자");
-                    let tension = b.tensions.first().copied().unwrap_or("고요한 경계");
-                    (
-                        format!("{} — {}", b.label, b.epithet),
-                        resource,
-                        tension,
-                        b.description,
-                    )
-                })
-                .unwrap_or_else(|| {
-                    (
-                        "미확인 생태구역".to_string(),
-                        "미확인 자원",
-                        "미확인 긴장",
-                        "기록 없음",
-                    )
-                });
-
-            let faction_thread = world_meta
-                .faction_profile(identity.faction)
-                .map(|f| {
-                    let vector = f
-                        .influence_vectors
-                        .first()
-                        .copied()
-                        .unwrap_or("은밀한 영향");
-                    let stronghold = f
-                        .strongholds
-                        .first()
-                        .map(|biome| biome_label(&world_meta, *biome))
-                        .unwrap_or_else(|| "거점 없음".to_string());
-                    format!(
-                        "{} | 교리: {} | 영향 축: {} | 거점: {}",
-                        f.motto, f.doctrine, vector, stronghold
-                    )
-                })
-                .unwrap_or_else(|| "분류되지 않은 동기".to_string());
-
-            format!(
-                "{} ({}) 는 {} 상태로 {}에 있습니다 | 초점 자원: {} | 긴장 요인: {} | 분위기: {} | {}",
-                identity.name,
-                faction_label(identity.faction),
-                behavior_label(behavior.state),
-                biome_summary,
-                resource_hint,
-                tension_hint,
-                description_snippet,
-                faction_thread
-            )
-        })
-        .unwrap_or_else(|| "관측 가능한 개체가 없습니다".to_string());
-
-    info!(
-        tick = time.tick,
-        epoch, season, catalyst, circulation_stage, stressor, sample, "세계 맥동"
+    let header_line = format!(
+        "{} {} {} {} {} {}",
+        badge("세계", Color::BrightWhite),
+        badge(&format!("Tick {}", time.tick), Color::BrightBlack),
+        badge(epoch, Color::BrightCyan),
+        badge(season, Color::BrightBlue),
+        badge("순환", Color::BrightGreen),
+        badge(circulation_stage, Color::BrightGreen),
     );
+
+    let stress_line = format!(
+        "{} {} {}",
+        badge("촉매", Color::Yellow),
+        badge(catalyst, Color::Yellow),
+        badge(stressor, Color::BrightRed),
+    );
+
+    let mut lines = vec![header_line, stress_line];
+
+    if let Some((identity, behavior, position)) = query.iter().next() {
+        lines.push(format_sample_line(
+            &world_meta,
+            identity,
+            behavior,
+            position,
+        ));
+    }
+
+    let recent_events = events
+        .snapshot()
+        .into_iter()
+        .rev()
+        .take(3)
+        .map(|event| format_event_line(&event));
+
+    let mut has_event = false;
+    for line in recent_events {
+        has_event = true;
+        lines.push(line);
+    }
+
+    if !has_event {
+        lines.push(
+            "[이벤트] 최근 등록된 세계 이벤트가 없습니다"
+                .color(Color::BrightBlack)
+                .to_string(),
+        );
+    }
+
+    let output = lines.join("\n");
+    info!("\n{}", output);
 }

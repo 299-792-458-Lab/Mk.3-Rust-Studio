@@ -27,6 +27,14 @@ pub enum WorldEventKind {
     },
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Sentiment {
+    Positive,
+    Neutral,
+    Negative,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventActor {
     pub id: u64,
@@ -48,6 +56,52 @@ pub struct WorldEvent {
 }
 
 impl WorldEvent {
+    pub fn category(&self) -> &'static str {
+        match &self.kind {
+            WorldEventKind::Trade { .. } => "무역",
+            WorldEventKind::Social { .. } => "사회",
+            WorldEventKind::MacroShock { .. } => "거시충격",
+        }
+    }
+
+    pub fn sentiment(&self) -> Sentiment {
+        match &self.kind {
+            WorldEventKind::Trade { .. } => Sentiment::Positive,
+            WorldEventKind::Social { .. } => Sentiment::Positive,
+            WorldEventKind::MacroShock { .. } => Sentiment::Negative,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn headline(&self) -> String {
+        match &self.kind {
+            WorldEventKind::Trade {
+                actor,
+                trade_focus,
+                market_pressure,
+            } => format!(
+                "{} 님이 {} 거래를 조율합니다 | 압력: {}",
+                actor.name, trade_focus, market_pressure
+            ),
+            WorldEventKind::Social {
+                convener,
+                gathering_theme,
+                cohesion_level,
+            } => format!(
+                "{} 님이 \"{}\" 주제로 모임을 주관합니다 | 응집도: {}",
+                convener.name, gathering_theme, cohesion_level
+            ),
+            WorldEventKind::MacroShock {
+                stressor,
+                catalyst,
+                projected_impact,
+            } => format!(
+                "{} | 촉발 요인: {} | 영향: {}",
+                stressor, catalyst, projected_impact
+            ),
+        }
+    }
+
     pub fn trade(
         tick: u64,
         epoch: &str,

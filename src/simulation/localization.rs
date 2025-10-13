@@ -1,6 +1,8 @@
-//! Localization helpers that convert core enums into Korean display strings.
+//! Localization helpers for Korean display strings and color semantics.
 
-use crate::simulation::{BehaviorState, Faction};
+use colored::Color;
+
+use crate::simulation::{BehaviorState, Faction, Sentiment};
 
 pub fn behavior_label(state: BehaviorState) -> &'static str {
     match state {
@@ -21,5 +23,43 @@ pub fn faction_label(faction: Faction) -> &'static str {
         Faction::ExplorersLeague => "탐험가 연맹",
         Faction::SettlersUnion => "개척민 연합",
         Faction::TempleOfSuns => "태양의 성전",
+    }
+}
+
+pub fn behavior_color(state: BehaviorState) -> Color {
+    match state {
+        BehaviorState::Idle => Color::BrightBlack,
+        BehaviorState::Explore => Color::BrightBlue,
+        BehaviorState::Gather => Color::BrightGreen,
+        BehaviorState::Trade => Color::BrightCyan,
+        BehaviorState::Hunt => Color::BrightRed,
+        BehaviorState::Rest => Color::Magenta,
+    }
+}
+
+pub fn faction_color(faction: Faction) -> Color {
+    match faction {
+        Faction::Neutral => Color::White,
+        Faction::MerchantGuild => Color::BrightYellow,
+        Faction::BanditClans => Color::Red,
+        Faction::ExplorersLeague => Color::Blue,
+        Faction::SettlersUnion => Color::Green,
+        Faction::TempleOfSuns => Color::Magenta,
+    }
+}
+
+pub fn sentiment_label(sentiment: Sentiment) -> &'static str {
+    match sentiment {
+        Sentiment::Positive => "긍정",
+        Sentiment::Neutral => "중립",
+        Sentiment::Negative => "부정",
+    }
+}
+
+pub fn sentiment_color(sentiment: Sentiment) -> Color {
+    match sentiment {
+        Sentiment::Positive => Color::BrightGreen,
+        Sentiment::Neutral => Color::Yellow,
+        Sentiment::Negative => Color::BrightRed,
     }
 }
