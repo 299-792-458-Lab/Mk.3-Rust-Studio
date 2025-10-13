@@ -14,3 +14,5 @@ anyhow = "1"
 rand = { version = "0.8", features = ["small_rng"] }
 axum = { version = "0.7", features = ["json"] }
 colored = "2"
+ratatui = { version = "0.26.1", features = ["crossterm"] }
+crossterm = "0.27.0"

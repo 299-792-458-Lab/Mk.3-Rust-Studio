@@ -1,45 +1,34 @@
+use std::io::{self, stdout};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-use axum::{
-    Json, Router,
-    extract::{Query, State},
-    routing::get,
+use crossterm::{
+    event::{self, Event, KeyCode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
 };
-use serde::Deserialize;
+use ratatui::{prelude::*, Terminal};
 use tokio::sync::Notify;
-use tracing::{info, warn};
-use tracing_subscriber::EnvFilter;
 
 mod simulation;
+mod ui;
 
-use simulation::{ObserverSnapshot, SimulationConfig, SimulationWorld, WorldEvent};
-
-#[derive(Clone)]
-struct AppState {
-    observer: Arc<RwLock<ObserverSnapshot>>,
-}
-
-#[derive(Debug, Deserialize)]
-struct EventsQuery {
-    limit: Option<usize>,
-}
+use simulation::{ObserverSnapshot, SimulationConfig, SimulationWorld};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    initialize_tracing();
-
-    let mut config = SimulationConfig::default();
-    config.tick_duration = Duration::from_secs(1);
+    // Simulation Setup
+    let config = SimulationConfig {
+        tick_duration: Duration::from_secs(1),
+        ..Default::default()
+    };
     let tick_duration = config.tick_duration;
 
     let observer = Arc::new(RwLock::new(ObserverSnapshot::default()));
     let shutdown_notify = Arc::new(Notify::new());
 
-    let observer_for_sim = observer.clone();
+    let mut simulation = SimulationWorld::with_observer(config, observer.clone());
     let notify_for_simulation = shutdown_notify.clone();
-
-    let mut simulation = SimulationWorld::with_observer(config, observer_for_sim);
     let simulation_task = tokio::spawn(async move {
         let mut interval = tokio::time::interval(tick_duration);
         loop {
@@ -50,73 +39,42 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
-    let app_state = AppState {
-        observer: observer.clone(),
-    };
+    // TUI Setup
+    let mut terminal = init_terminal()?;
+    let mut app_should_run = true;
 
-    let router = Router::new()
-        .route("/world/state", get(world_state_handler))
-        .route("/world/events", get(world_events_handler))
-        .with_state(app_state);
+    while app_should_run {
+        terminal.draw(|frame| {
+            let snapshot = observer.read().expect("Observer lock is poisoned").clone();
+            ui::render(frame, &snapshot);
+        })?;
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
-    info!("TERA API가 http://127.0.0.1:8080 에서 대기 중입니다");
-
-    let notify_for_server = shutdown_notify.clone();
-    let server_result = axum::serve(listener, router)
-        .with_graceful_shutdown(async move {
-            if let Err(err) = tokio::signal::ctrl_c().await {
-                warn!("Ctrl-C 신호 수신에 실패했습니다: {err}");
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                if key.code == KeyCode::Char('q') {
+                    app_should_run = false;
+                }
             }
-            notify_for_server.notify_waiters();
-        })
-        .await;
+        }
+    }
 
-    // Ensure the simulation loop halts even if the server exits unexpectedly.
+    // Shutdown
     shutdown_notify.notify_waiters();
     simulation_task.await?;
-    server_result?;
+    restore_terminal()?;
 
     Ok(())
 }
 
-async fn world_state_handler(State(state): State<AppState>) -> Json<ObserverSnapshot> {
-    let snapshot = {
-        let guard = state
-            .observer
-            .read()
-            .expect("관찰자 스냅샷 락이 손상되었습니다");
-        guard.clone()
-    };
-    Json(snapshot)
+fn init_terminal() -> io::Result<Terminal<impl Backend>> {
+    enable_raw_mode()?;
+    stdout().execute(EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout());
+    Terminal::new(backend)
 }
 
-async fn world_events_handler(
-    State(state): State<AppState>,
-    Query(params): Query<EventsQuery>,
-) -> Json<Vec<WorldEvent>> {
-    let mut events = {
-        let guard = state
-            .observer
-            .read()
-            .expect("관찰자 스냅샷 락이 손상되었습니다");
-        guard.events.clone()
-    };
-
-    if let Some(limit) = params.limit {
-        if events.len() > limit {
-            events = events.split_off(events.len() - limit);
-        }
-    }
-
-    Json(events)
-}
-
-fn initialize_tracing() {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
-        )
-        .with_target(false)
-        .try_init();
+fn restore_terminal() -> io::Result<()> {
+    disable_raw_mode()?;
+    stdout().execute(LeaveAlternateScreen)?;
+    Ok(())
 }
