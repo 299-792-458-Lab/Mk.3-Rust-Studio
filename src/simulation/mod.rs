@@ -57,6 +57,7 @@ impl SimulationWorld {
                 movement_and_combat_system,
                 economy_system,
                 warfare_system,
+                territory_system,
                 event_generation_system,
                 logging_system,
             )
