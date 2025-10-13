@@ -2,6 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::Schedule;
+use std::collections::HashMap;
 
 pub mod components;
 pub mod events;
@@ -41,12 +42,13 @@ impl SimulationWorld {
     ) -> Self {
         let mut world = World::default();
         world.insert_resource(config);
-        world.insert_resource(WorldTime::default());
         world.insert_resource(AllNationMetrics::default());
+        world.insert_resource(WorldTime::default());
         world.insert_resource(WorldMetadata::default());
         world.insert_resource(WorldEventLog::default());
 
         seed_entities(&mut world);
+        seed_grid(&mut world);
 
         let mut schedule = Schedule::default();
         schedule.add_systems(
@@ -81,6 +83,8 @@ impl SimulationWorld {
     fn refresh_observer_snapshot(&mut self) {
         let tick = self.world.resource::<WorldTime>().tick;
         let world_meta = self.world.resource::<WorldMetadata>().clone();
+        let metrics = self.world.resource::<AllNationMetrics>();
+        let grid = self.world.resource::<HexGrid>();
 
         let (epoch, season) = {
             let (epoch, season) = world_meta.epoch_for_tick(tick);
@@ -119,12 +123,29 @@ impl SimulationWorld {
             )
             .collect::<Vec<_>>();
 
-        let metrics = self.world.resource::<AllNationMetrics>();
-
         if let Ok(mut snapshot) = self.observer.write() {
-            snapshot.update(tick, epoch, season, metrics, entities, events);
+            snapshot.update(tick, epoch, season, metrics, grid, entities, events);
         }
     }
+}
+
+fn seed_grid(world: &mut World) {
+    let radius = 5;
+    let mut hexes = HashMap::new();
+    for q in -radius..=radius {
+        for r in (-radius).max(-q - radius)..=radius.min(-q + radius) {
+            let coord = AxialCoord { q, r };
+            let owner = if q < -1 {
+                Nation::Sora
+            } else if q > 1 {
+                Nation::Aqua
+            } else {
+                Nation::Tera
+            };
+            hexes.insert(coord, Hex { coord, owner });
+        }
+    }
+    world.insert_resource(HexGrid { hexes, radius });
 }
 
 fn seed_entities(world: &mut World) {

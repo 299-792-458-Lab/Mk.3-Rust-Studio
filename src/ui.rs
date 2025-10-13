@@ -166,6 +166,42 @@ fn render_world_state_panel(snapshot: &ObserverSnapshot, tick_duration: Duration
         .block(Block::default().title("World State").borders(Borders::ALL))
 }
 
+struct MapWidget<'a> {
+    grid: &'a HexGrid,
+}
+
+impl<'a> Widget for MapWidget<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let radius = self.grid.radius;
+        let center_x = area.x + area.width / 2;
+        let center_y = area.y + area.height / 2;
+
+        for (&coord, hex) in &self.grid.hexes {
+            // Convert axial to screen coordinates (flat-top hexes)
+            let hex_width = 4; // Characters per hex width
+            let hex_height = 2; // Characters per hex height
+
+            let screen_x = center_x as i32 + (coord.q * hex_width as i32) + (coord.r * (hex_width as i32 / 2));
+            let screen_y = center_y as i32 + (coord.r * hex_height as i32 * 3 / 4);
+
+            // Simple character representation of a hex
+            let hex_char = "██";
+
+            let color = match hex.owner {
+                Nation::Tera => Color::Blue,
+                Nation::Sora => Color::Red,
+                Nation::Aqua => Color::Green,
+            };
+
+            // Draw the hex character
+            if screen_x >= area.x as i32 && screen_x + hex_width as i32 <= (area.x + area.width) as i32 &&
+               screen_y >= area.y as i32 && screen_y + hex_height as i32 <= (area.y + area.height) as i32 {
+                buf.set_string(screen_x as u16, screen_y as u16, hex_char, Style::default().fg(color));
+            }
+        }
+    }
+}
+
 fn create_bar(value: f32, max_value: f32, max_width: usize) -> Line<'static> {
     let percentage = (value / max_value).clamp(0.0, 1.0);
     let width = (percentage * max_width as f32) as usize;

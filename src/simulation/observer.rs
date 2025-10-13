@@ -1,6 +1,6 @@
 //! Shared observer snapshot structures exported via the API.
 
-use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, Nation, WorldEvent};
+use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, Nation, WorldEvent, HexGrid};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -18,12 +18,13 @@ pub struct EntitySnapshot {
     pub fame: f32,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct ObserverSnapshot {
     pub tick: u64,
     pub epoch: String,
     pub season: String,
     pub all_metrics: AllNationMetrics,
+    pub grid: HexGrid,
     pub entities: Vec<EntitySnapshot>,
     pub events: Vec<WorldEvent>,
 }
@@ -35,6 +36,7 @@ impl ObserverSnapshot {
             epoch: "새벽".to_string(),
             season: "꽃피움 계절".to_string(),
             all_metrics: AllNationMetrics::default(),
+            grid: HexGrid::default(),
             entities: Vec::new(),
             events: Vec::new(),
         }
@@ -46,6 +48,7 @@ impl ObserverSnapshot {
         epoch: String,
         season: String,
         metrics: &AllNationMetrics,
+        grid: &HexGrid,
         entities: Vec<EntitySnapshot>,
         events: Vec<WorldEvent>,
     ) {
@@ -53,6 +56,7 @@ impl ObserverSnapshot {
         self.epoch = epoch;
         self.season = season;
         self.all_metrics = metrics.clone();
+        self.grid = grid.clone();
         self.entities = entities;
         self.events = events;
     }
