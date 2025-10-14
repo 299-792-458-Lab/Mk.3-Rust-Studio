@@ -55,12 +55,14 @@ impl Default for DeltaTime {
 #[derive(Debug, Clone, Resource)]
 pub struct SimulationConfig {
     pub tick_duration: Duration,
+    pub grid_radius: i32,
 }
 
 impl Default for SimulationConfig {
     fn default() -> Self {
         Self {
             tick_duration: Duration::from_secs(1),
+            grid_radius: 5,
         }
     }
 }

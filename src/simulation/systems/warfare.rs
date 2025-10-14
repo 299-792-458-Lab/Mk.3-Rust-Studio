@@ -30,8 +30,7 @@ pub fn warfare_system(
     time: Res<WorldTime>,
     mut event_log: ResMut<crate::simulation::WorldEventLog>,
     world_meta: Res<crate::simulation::WorldMetadata>,
-    grid: Res<HexGrid>,
-    hex_query: Query<(Entity, &Hex)>,
+    hex_query: Query<(Entity, &Hex, &AxialCoord)>,
 ) {
     let mut rng = SmallRng::seed_from_u64(time.tick.wrapping_mul(257));
     let mut battle_requests = Vec::new();
@@ -115,17 +114,17 @@ pub fn warfare_system(
         let mut border_hex_entities = HashSet::new();
         let nation_hexes: HashMap<Nation, HashSet<AxialCoord>> = {
             let mut map = HashMap::new();
-            for (_, hex) in hex_query.iter() {
-                map.entry(hex.owner).or_default().insert(hex.coord);
+            for (_, hex, coord) in hex_query.iter() {
+                map.entry(hex.owner).or_default().insert(*coord);
             }
             map
         };
 
         let loser_hexes = nation_hexes.get(&loser).cloned().unwrap_or_default();
 
-        for (entity, hex) in hex_query.iter() {
+        for (entity, hex, coord) in hex_query.iter() {
             if hex.owner == winner {
-                for neighbor_coord in hex.coord.neighbors() {
+                for neighbor_coord in coord.neighbors() {
                     if loser_hexes.contains(&neighbor_coord) {
                         border_hex_entities.insert(entity);
                     }
