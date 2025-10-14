@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::Schedule;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub mod components;
 pub mod events;
@@ -54,9 +54,9 @@ impl SimulationWorld {
         schedule.add_systems(
             (
                 ai_state_transition_system,
-                movement_and_combat_system,
+                combat_cleanup_system, // Clean up combat from previous tick
                 economy_system,
-                warfare_system,
+                warfare_system, // Handles starting new combat
                 territory_system,
                 event_generation_system,
                 logging_system,
@@ -85,7 +85,16 @@ impl SimulationWorld {
         let tick = self.world.resource::<WorldTime>().tick;
         let world_meta = self.world.resource::<WorldMetadata>().clone();
         let metrics = self.world.resource::<AllNationMetrics>().clone();
-        let grid = self.world.resource::<HexGrid>().clone();
+
+        // We need to construct a new HexGrid snapshot because the resource now holds entities.
+        let grid_snapshot = {
+            let mut hexes = HashMap::new();
+            let mut query = self.world.query::<(&AxialCoord, &Hex)>();
+            for (coord, hex) in query.iter(&self.world) {
+                hexes.insert(*coord, observer::HexSnapshot { owner: hex.owner });
+            }
+            observer::HexGridSnapshot { hexes, radius: self.world.resource::<HexGrid>().radius }
+        };
 
         let (epoch, season) = {
             let (epoch, season) = world_meta.epoch_for_tick(tick);
@@ -124,29 +133,42 @@ impl SimulationWorld {
             )
             .collect::<Vec<_>>();
 
+        let combat_hexes = {
+            let mut combat_hexes = HashSet::new();
+            let mut query = self.world.query::<(&AxialCoord, &InCombat)>();
+            for (coord, _) in query.iter(&self.world) {
+                combat_hexes.insert(*coord);
+            }
+            combat_hexes
+        };
+
         if let Ok(mut snapshot) = self.observer.write() {
-            snapshot.update(tick, epoch, season, &metrics, &grid, entities, events);
+            snapshot.update(tick, epoch, season, &metrics, grid_snapshot, entities, events, combat_hexes);
         }
     }
 }
 
 fn seed_grid(world: &mut World) {
-    let radius = 5;
-    let mut hexes = HashMap::new();
+    let config = world.resource::<SimulationConfig>().clone();
+    let radius = config.grid_radius;
+    let mut hex_entities = HashMap::new();
+
     for q in -radius..=radius {
         for r in (-radius).max(-q - radius)..=radius.min(-q + radius) {
             let coord = AxialCoord { q, r };
-            let owner = if q < -1 {
+            let owner = if q < -radius / 2 {
                 Nation::Sora
-            } else if q > 1 {
+            } else if q > radius / 2 {
                 Nation::Aqua
             } else {
                 Nation::Tera
             };
-            hexes.insert(coord, Hex { coord, owner });
+
+            let hex_entity = world.spawn((coord, Hex { owner })).id();
+            hex_entities.insert(coord, hex_entity);
         }
     }
-    world.insert_resource(HexGrid { hexes, radius });
+    world.insert_resource(HexGrid { hexes: hex_entities, radius });
 }
 
 fn seed_entities(world: &mut World) {

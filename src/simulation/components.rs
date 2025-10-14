@@ -85,6 +85,33 @@ pub enum BehaviorState {
 }
 
 #[derive(Debug, Clone, Component, Serialize, Deserialize)]
+
 pub struct Behavior {
+
     pub state: BehaviorState,
+
 }
+
+
+
+#[derive(Debug, Clone, Component, Serialize, Deserialize)]
+
+pub struct InCombat {
+
+    pub ticks_remaining: u32,
+
+}
+
+
+
+#[derive(Debug, Clone, Component, Serialize, Deserialize)]
+
+pub struct Combatants {
+
+    pub nation_a: Nation,
+
+    pub nation_b: Nation,
+
+}
+
+

@@ -1,7 +1,8 @@
 //! Shared observer snapshot structures exported via the API.
 
-use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, WorldEvent, HexGrid};
+use crate::simulation::{AllNationMetrics, BehaviorState, Biome, Faction, WorldEvent, AxialCoord, Nation};
 use serde::Serialize;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EntitySnapshot {
@@ -18,15 +19,27 @@ pub struct EntitySnapshot {
     pub fame: f32,
 }
 
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct HexGridSnapshot {
+    pub hexes: HashMap<AxialCoord, HexSnapshot>,
+    pub radius: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct HexSnapshot {
+    pub owner: Nation,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ObserverSnapshot {
     pub tick: u64,
     pub epoch: String,
     pub season: String,
     pub all_metrics: AllNationMetrics,
-    pub grid: HexGrid,
+    pub grid: HexGridSnapshot,
     pub entities: Vec<EntitySnapshot>,
     pub events: Vec<WorldEvent>,
+    pub combat_hexes: HashSet<AxialCoord>,
 }
 
 impl ObserverSnapshot {
@@ -36,9 +49,10 @@ impl ObserverSnapshot {
             epoch: "새벽".to_string(),
             season: "꽃피움 계절".to_string(),
             all_metrics: AllNationMetrics::default(),
-            grid: HexGrid::default(),
+            grid: HexGridSnapshot::default(),
             entities: Vec::new(),
             events: Vec::new(),
+            combat_hexes: HashSet::new(),
         }
     }
 
@@ -48,17 +62,19 @@ impl ObserverSnapshot {
         epoch: String,
         season: String,
         metrics: &AllNationMetrics,
-        grid: &HexGrid,
+        grid: HexGridSnapshot,
         entities: Vec<EntitySnapshot>,
         events: Vec<WorldEvent>,
+        combat_hexes: HashSet<AxialCoord>,
     ) {
         self.tick = tick;
         self.epoch = epoch;
         self.season = season;
         self.all_metrics = metrics.clone();
-        self.grid = grid.clone();
+        self.grid = grid;
         self.entities = entities;
         self.events = events;
+        self.combat_hexes = combat_hexes;
     }
 }
 

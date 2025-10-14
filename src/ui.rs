@@ -1,13 +1,11 @@
 use crate::simulation::events::{WorldEventKind};
-use crate::simulation::grid::HexGrid;
-use crate::simulation::{ObserverSnapshot};
+use crate::simulation::{ObserverSnapshot, HexGridSnapshot};
 use ratatui::{
     prelude::*,
     style::Stylize,
     text::{Line, Span},
     widgets::{Block, Borders, Cell, Paragraph, Row, Table},
 };
-
 use std::time::Duration;
 
 pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Duration) {
@@ -41,7 +39,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     render_world_state_panel(frame, top_layout[0], snapshot, tick_duration);
 
     // Map Widget
-    let map_widget = MapWidget { grid: &snapshot.grid };
+    let map_widget = MapWidget { snapshot };
     frame.render_widget(map_widget, top_layout[1]);
 
     // Event Log Panel - Using a Table for alignment
@@ -223,31 +221,37 @@ fn render_world_state_panel(frame: &mut Frame, area: Rect, snapshot: &ObserverSn
 }
 
 struct MapWidget<'a> {
-    grid: &'a HexGrid,
+    snapshot: &'a ObserverSnapshot,
 }
 
 impl<'a> Widget for MapWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let _radius = self.grid.radius;
+        let grid = &self.snapshot.grid;
         let center_x = area.x + area.width / 2;
         let center_y = area.y + area.height / 2;
 
-        for (&coord, hex) in &self.grid.hexes {
+        for (&coord, hex) in &grid.hexes {
             // Convert axial to screen coordinates (flat-top hexes)
-            let hex_width = 4; // Characters per hex width
-            let hex_height = 2; // Characters per hex height
+            let hex_width = 4;
+            let hex_height = 2;
 
-            let screen_x = center_x as i32 + (coord.q * hex_width as i32) + (coord.r * (hex_width as i32 / 2));
-            let screen_y = center_y as i32 + (coord.r * hex_height as i32 * 3 / 4);
+            let screen_x = center_x as i32 + (coord.q * hex_width) + (coord.r * (hex_width / 2));
+            let screen_y = center_y as i32 + (coord.r * hex_height * 3 / 4);
 
-            // Simple character representation of a hex
             let hex_char = "██";
 
-            let color = hex.owner.color();
+            let mut color = hex.owner.color();
+
+            // Twinkling effect for combat zones
+            if self.snapshot.combat_hexes.contains(&coord) {
+                if self.snapshot.tick % 2 == 0 {
+                    color = Color::Yellow; // Bright color for twinkling
+                }
+            }
 
             // Draw the hex character
-            if screen_x >= area.x as i32 && screen_x + hex_width as i32 <= (area.x + area.width) as i32 &&
-               screen_y >= area.y as i32 && screen_y + hex_height as i32 <= (area.y + area.height) as i32 {
+            if screen_x >= area.x as i32 && screen_x + hex_width <= (area.x + area.width) as i32 &&
+               screen_y >= area.y as i32 && screen_y + hex_height <= (area.y + area.height) as i32 {
                 buf.set_string(screen_x as u16, screen_y as u16, hex_char, Style::default().fg(color));
             }
         }

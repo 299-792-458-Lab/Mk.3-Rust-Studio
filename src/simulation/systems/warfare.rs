@@ -1,26 +1,43 @@
-// Warfare system
-
 use bevy_ecs::prelude::*;
-use crate::simulation::{AllNationMetrics, Nation, WorldTime};
+use crate::simulation::{
+    AllNationMetrics, Nation, WorldTime, HexGrid, Hex,
+    components::{InCombat, Combatants},
+    grid::AxialCoord,
+};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use std::collections::{HashMap, HashSet};
 
-struct BattleResult {
-    winner: Nation,
-    loser: Nation,
+struct BattleRequest {
+    nation_a: Nation,
+    nation_b: Nation,
+}
+
+// System to clean up finished combat encounters
+pub fn combat_cleanup_system(mut commands: Commands, mut query: Query<(Entity, &mut InCombat)>) {
+    for (entity, mut in_combat) in query.iter_mut() {
+        in_combat.ticks_remaining = in_combat.ticks_remaining.saturating_sub(1);
+        if in_combat.ticks_remaining == 0 {
+            commands.entity(entity).remove::<InCombat>();
+            commands.entity(entity).remove::<Combatants>();
+        }
+    }
 }
 
 pub fn warfare_system(
+    mut commands: Commands,
     mut all_metrics: ResMut<AllNationMetrics>,
     time: Res<WorldTime>,
     mut event_log: ResMut<crate::simulation::WorldEventLog>,
     world_meta: Res<crate::simulation::WorldMetadata>,
+    grid: Res<HexGrid>,
+    hex_query: Query<(Entity, &Hex)>,
 ) {
     let mut rng = SmallRng::seed_from_u64(time.tick.wrapping_mul(257));
-    let mut battle_results = Vec::new();
+    let mut battle_requests = Vec::new();
 
+    // 1. Identify potential battles
     let nations: Vec<Nation> = all_metrics.0.keys().cloned().collect();
-
     for i in 0..nations.len() {
         for j in (i + 1)..nations.len() {
             let nation_a_key = nations[i];
@@ -35,36 +52,45 @@ pub fn warfare_system(
                 continue;
             }
 
-            if rng.gen_bool(0.1) { // 10% chance of battle each tick
-                let military_a = metrics_a.military;
-                let military_b = metrics_b.military;
-
-                let roll_a = rng.gen_range(0.0..1.0) * military_a;
-                let roll_b = rng.gen_range(0.0..1.0) * military_b;
-
-                if roll_a > roll_b {
-                    battle_results.push(BattleResult { winner: nation_a_key, loser: nation_b_key });
-                } else {
-                    battle_results.push(BattleResult { winner: nation_b_key, loser: nation_a_key });
-                }
+            // 10% chance of battle each tick
+            if rng.gen_bool(0.1) {
+                battle_requests.push(BattleRequest { nation_a: nation_a_key, nation_b: nation_b_key });
             }
         }
     }
 
     let (epoch, season) = world_meta.epoch_for_tick(time.tick);
 
-    for result in battle_results {
+    // 2. Process battles
+    for request in battle_requests {
+        let (winner, loser) = {
+            let metrics_a = all_metrics.0.get(&request.nation_a).unwrap();
+            let metrics_b = all_metrics.0.get(&request.nation_b).unwrap();
+            let military_a = metrics_a.military;
+            let military_b = metrics_b.military;
+
+            let roll_a = rng.gen_range(0.0..1.0) * military_a;
+            let roll_b = rng.gen_range(0.0..1.0) * military_b;
+
+            if roll_a > roll_b {
+                (request.nation_a, request.nation_b)
+            } else {
+                (request.nation_b, request.nation_a)
+            }
+        };
+
+        // Update metrics
         let territory_change = 0.5;
         let military_loss = 2.0;
 
-        if let Some(winner_metrics) = all_metrics.0.get_mut(&result.winner) {
+        if let Some(winner_metrics) = all_metrics.0.get_mut(&winner) {
             winner_metrics.territory += territory_change;
             winner_metrics.military -= military_loss;
             winner_metrics.territory = winner_metrics.territory.max(0.0);
             winner_metrics.military = winner_metrics.military.max(0.0);
         }
 
-        if let Some(loser_metrics) = all_metrics.0.get_mut(&result.loser) {
+        if let Some(loser_metrics) = all_metrics.0.get_mut(&loser) {
             loser_metrics.territory -= territory_change;
             loser_metrics.military -= military_loss;
             loser_metrics.territory = loser_metrics.territory.max(0.0);
@@ -75,13 +101,43 @@ pub fn warfare_system(
             }
         }
 
+        // Log the event
         event_log.push(crate::simulation::WorldEvent::warfare(
             time.tick,
             epoch,
             season,
-            result.winner,
-            result.loser,
+            winner,
+            loser,
             territory_change,
         ));
+
+        // 3. Find border hexes and mark them as in combat
+        let mut border_hex_entities = HashSet::new();
+        let nation_hexes: HashMap<Nation, HashSet<AxialCoord>> = {
+            let mut map = HashMap::new();
+            for (_, hex) in hex_query.iter() {
+                map.entry(hex.owner).or_default().insert(hex.coord);
+            }
+            map
+        };
+
+        let loser_hexes = nation_hexes.get(&loser).cloned().unwrap_or_default();
+
+        for (entity, hex) in hex_query.iter() {
+            if hex.owner == winner {
+                for neighbor_coord in hex.coord.neighbors() {
+                    if loser_hexes.contains(&neighbor_coord) {
+                        border_hex_entities.insert(entity);
+                    }
+                }
+            }
+        }
+
+        for entity in border_hex_entities {
+            commands.entity(entity).insert((
+                InCombat { ticks_remaining: 5 },
+                Combatants { nation_a: winner, nation_b: loser },
+            ));
+        }
     }
 }

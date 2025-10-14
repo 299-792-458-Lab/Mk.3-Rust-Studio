@@ -20,6 +20,7 @@ async fn main() -> anyhow::Result<()> {
     // Simulation Setup
     let config = SimulationConfig {
         tick_duration: Duration::from_secs(1),
+        grid_radius: 10,
         ..Default::default()
     };
     let initial_tick_duration = config.tick_duration;
