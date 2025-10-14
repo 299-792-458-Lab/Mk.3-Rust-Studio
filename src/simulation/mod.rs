@@ -3,6 +3,7 @@ use std::sync::{Arc, RwLock};
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::Schedule;
 use std::collections::{HashMap, HashSet};
+use rand::{Rng, SeedableRng};
 
 pub mod components;
 pub mod events;
@@ -148,20 +149,45 @@ impl SimulationWorld {
     }
 }
 
+use rand::{Rng, SeedableRng};
+
 fn seed_grid(world: &mut World) {
     let config = world.resource::<SimulationConfig>().clone();
     let radius = config.grid_radius;
     let mut hex_entities = HashMap::new();
+    let mut rng = SmallRng::seed_from_u64(1234); // Seed for deterministic map generation
+
+    let sea_radius = radius as f32 * 0.2; // A small sea in the middle
 
     for q in -radius..=radius {
         for r in (-radius).max(-q - radius)..=radius.min(-q + radius) {
             let coord = AxialCoord { q, r };
-            let owner = if q < -radius / 2 {
-                Nation::Sora
-            } else if q > radius / 2 {
-                Nation::Aqua
+
+            // --- Procedural Generation ---
+            let dist_from_center = (coord.q.pow(2) + coord.r.pow(2) + coord.q * coord.r) as f32;
+
+            // 1. Carve out a central sea
+            if dist_from_center < sea_radius.powi(2) {
+                continue; // Skip hexes in the central sea
+            }
+
+            // 2. Create ragged edges for a more natural coastline
+            let edge_threshold = (radius as f32 * 0.8).powi(2);
+            if dist_from_center > edge_threshold && rng.gen_bool(0.4) {
+                continue; // Randomly skip some hexes near the border
+            }
+
+            // --- Territory Distribution (120-degree sectors) ---
+            let angle = (r as f32 * (3.0_f32).sqrt() / 2.0)
+                .atan2(q as f32 + r as f32 / 2.0)
+                .to_degrees();
+
+            let owner = if angle > -60.0 && angle <= 60.0 {
+                Nation::Aqua // East
+            } else if angle > 60.0 && angle <= 180.0 {
+                Nation::Sora // Northwest
             } else {
-                Nation::Tera
+                Nation::Tera // Southwest
             };
 
             let hex_entity = world.spawn((coord, Hex { owner })).id();

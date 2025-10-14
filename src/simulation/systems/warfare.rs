@@ -47,7 +47,7 @@ pub fn warfare_system(
                 all_metrics.0.get(&nation_b_key).unwrap(),
             );
 
-            if metrics_a.is_destroyed || metrics_b.is_destroyed {
+            if metrics_a.is_destroyed || metrics_b.is_destroyed || metrics_a.military <= 1.0 || metrics_b.military <= 1.0 {
                 continue;
             }
 

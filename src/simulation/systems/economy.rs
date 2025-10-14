@@ -46,14 +46,36 @@ pub fn economy_system(
 ) {
     let (segment, season) = world_meta.epoch_for_tick(time.tick);
 
-    // Apply a decay factor to all nations' metrics
+    // First, handle nation-level economic updates (upkeep, investment)
     for metrics in all_metrics.0.values_mut() {
-        metrics.economy *= 0.999;
+        // 1. Military Upkeep
+        let upkeep_cost = metrics.military * 0.05; // 5% of military strength per tick
+        metrics.economy -= upkeep_cost;
+
+        // If economy is negative after upkeep, it hurts the military
+        if metrics.economy < 0.0 {
+            // The negative economy directly translates into a proportional military reduction
+            metrics.military += metrics.economy * 0.2;
+            metrics.economy = 0.0; // Reset economy to zero
+        }
+
+        // 2. Military Recruitment/Investment
+        // If economy is strong, invest in the military
+        if metrics.economy > 70.0 && metrics.military < 100.0 {
+            let investment = 2.0;
+            let growth = 0.5;
+            if metrics.economy >= investment {
+                metrics.economy -= investment;
+                metrics.military += growth;
+            }
+        }
+
+        // 3. General decay for other metrics
         metrics.satisfaction *= 0.998;
         metrics.security *= 0.999;
-        metrics.military *= 0.999;
     }
 
+    // Second, handle individual NPC actions
     for (identity, position, behavior, mut inventory) in &mut query {
         let nation = identity.nation;
         let metrics = all_metrics.0.get_mut(&nation).unwrap();
