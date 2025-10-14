@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::*;
 use crate::simulation::{
-    AllNationMetrics, Nation, WorldTime, HexGrid, Hex,
+    AllNationMetrics, Nation, WorldTime, Hex,
     components::{InCombat, Combatants},
     grid::AxialCoord,
 };
@@ -113,7 +113,7 @@ pub fn warfare_system(
         // 3. Find border hexes and mark them as in combat
         let mut border_hex_entities = HashSet::new();
         let nation_hexes: HashMap<Nation, HashSet<AxialCoord>> = {
-            let mut map = HashMap::new();
+            let mut map: HashMap<Nation, HashSet<AxialCoord>> = HashMap::new();
             for (_, hex, coord) in hex_query.iter() {
                 map.entry(hex.owner).or_default().insert(*coord);
             }

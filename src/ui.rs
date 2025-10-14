@@ -1,5 +1,5 @@
 use crate::simulation::events::{WorldEventKind};
-use crate::simulation::{ObserverSnapshot, HexGridSnapshot};
+use crate::simulation::{ObserverSnapshot};
 use ratatui::{
     prelude::*,
     style::Stylize,
