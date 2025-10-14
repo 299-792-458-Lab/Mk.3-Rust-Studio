@@ -9,9 +9,11 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Resource, Serialize, Deserialize)]
 pub struct NationMetrics {
-    pub economy: f32,
-    pub satisfaction: f32,
-    pub security: f32,
+    pub economy: f32,      // 경제
+    pub science: f32,      // 과학
+    pub culture: f32,      // 문화
+    pub diplomacy: f32,    // 외교
+    pub religion: f32,     // 종교
     pub military: f32,
     pub territory: f32,
     pub is_destroyed: bool,
@@ -21,8 +23,10 @@ impl Default for NationMetrics {
     fn default() -> Self {
         Self {
             economy: 50.0,
-            satisfaction: 50.0,
-            security: 80.0,
+            science: 20.0,
+            culture: 30.0,
+            diplomacy: 30.0,
+            religion: 25.0,
             military: 20.0,
             territory: 33.33,
             is_destroyed: false,

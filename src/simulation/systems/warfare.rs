@@ -51,8 +51,16 @@ pub fn warfare_system(
                 continue;
             }
 
-            // 10% chance of battle each tick
-            if rng.gen_bool(0.1) {
+            // --- War Prevention Logic ---
+            // Higher diplomacy, culture, and religion reduce the chance of war.
+            let peace_factor = (metrics_a.diplomacy + metrics_b.diplomacy)
+                + (metrics_a.culture + metrics_b.culture) * 0.5
+                + (metrics_a.religion + metrics_b.religion) * 0.5;
+
+            // Base probability of war is 20%, reduced by the peace factor.
+            let war_prob = (0.2 - peace_factor * 0.001).max(0.01);
+
+            if rng.gen_bool(war_prob as f64) {
                 battle_requests.push(BattleRequest { nation_a: nation_a_key, nation_b: nation_b_key });
             }
         }
@@ -65,11 +73,14 @@ pub fn warfare_system(
         let (winner, loser) = {
             let metrics_a = all_metrics.0.get(&request.nation_a).unwrap();
             let metrics_b = all_metrics.0.get(&request.nation_b).unwrap();
-            let military_a = metrics_a.military;
-            let military_b = metrics_b.military;
 
-            let roll_a = rng.gen_range(0.0..1.0) * military_a;
-            let roll_b = rng.gen_range(0.0..1.0) * military_b;
+            // --- Battle Outcome Logic ---
+            // Science acts as a multiplier for military strength.
+            let military_a_effective = metrics_a.military * (1.0 + metrics_a.science / 100.0);
+            let military_b_effective = metrics_b.military * (1.0 + metrics_b.science / 100.0);
+
+            let roll_a = rng.gen_range(0.0..1.0) * military_a_effective;
+            let roll_b = rng.gen_range(0.0..1.0) * military_b_effective;
 
             if roll_a > roll_b {
                 (request.nation_a, request.nation_b)

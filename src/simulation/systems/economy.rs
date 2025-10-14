@@ -46,36 +46,47 @@ pub fn economy_system(
 ) {
     let (segment, season) = world_meta.epoch_for_tick(time.tick);
 
-    // First, handle nation-level economic updates (upkeep, investment)
+    // First, handle nation-level economic updates (upkeep, investment, growth, decay)
     for metrics in all_metrics.0.values_mut() {
         // 1. Military Upkeep
-        let upkeep_cost = metrics.military * 0.05; // 5% of military strength per tick
-        metrics.economy -= upkeep_cost;
+        let military_upkeep = metrics.military * 0.05;
+        metrics.economy -= military_upkeep;
+
+        // 2. Other Metrics Upkeep (they cost a little bit of economy)
+        let science_upkeep = metrics.science * 0.02;
+        let culture_upkeep = metrics.culture * 0.01;
+        let diplomacy_upkeep = metrics.diplomacy * 0.02;
+        metrics.economy -= science_upkeep + culture_upkeep + diplomacy_upkeep;
 
         // If economy is negative after upkeep, it hurts the military
         if metrics.economy < 0.0 {
-            // The negative economy directly translates into a proportional military reduction
-            metrics.military += metrics.economy * 0.2;
-            metrics.economy = 0.0; // Reset economy to zero
+            metrics.military += metrics.economy * 0.2; // Negative economy reduces military
+            metrics.economy = 0.0;
         }
 
-        // 2. Military Recruitment/Investment
-        // If economy is strong, invest in the military
-        if metrics.economy > 70.0 && metrics.military < 100.0 {
-            let investment = 2.0;
-            let growth = 0.5;
-            if metrics.economy >= investment {
-                metrics.economy -= investment;
-                metrics.military += growth;
-            }
+        // 3. Investment and Growth based on Economy
+        if metrics.economy > 70.0 { // High Economy Boosts
+            metrics.military += 0.5;
+            metrics.science += 0.4;
+            metrics.diplomacy += 0.3;
+            metrics.economy -= 5.0; // Investment cost
+        } else if metrics.economy > 40.0 { // Medium Economy
+            metrics.military += 0.1;
+            metrics.science += 0.15;
+            metrics.culture += 0.2;
+            metrics.religion += 0.1;
+            metrics.diplomacy += 0.1;
+            metrics.economy -= 1.0;
         }
 
-        // 3. General decay for other metrics
-        metrics.satisfaction *= 0.998;
-        metrics.security *= 0.999;
+        // 4. General Decay
+        metrics.science *= 0.999;
+        metrics.culture *= 0.998;
+        metrics.diplomacy *= 0.999;
+        metrics.religion *= 0.9995;
     }
 
-    // Second, handle individual NPC actions
+    // Second, handle individual NPC actions contributing to economy
     for (identity, position, behavior, mut inventory) in &mut query {
         let nation = identity.nation;
         let metrics = all_metrics.0.get_mut(&nation).unwrap();
@@ -110,12 +121,8 @@ pub fn economy_system(
             inventory.currency =
                 (inventory.currency + trade_gain.max(-inventory.currency)).max(0.0);
 
-            // Update world metrics
+            // NPC actions now contribute less directly, but still add to the economy
             metrics.economy += trade_gain * 0.05;
-            if trade_gain > 0.0 {
-                metrics.satisfaction += trade_gain * 0.02;
-            }
-            metrics.security -= risk_factor * 0.01; // Trade can be risky
         }
 
         if matches!(behavior.state, BehaviorState::Gather) {
@@ -124,15 +131,17 @@ pub fn economy_system(
                 + rng.gen_range(0.0..2.0);
             inventory.currency += gather_gain.max(0.0);
 
-            // Update world metrics
             metrics.economy += gather_gain * 0.03;
-            metrics.satisfaction += gather_gain * 0.01;
         }
+    }
 
-        // Clamp metrics to 0-100 range
+    // Finally, clamp all metrics to a 0-100 range
+    for metrics in all_metrics.0.values_mut() {
         metrics.economy = metrics.economy.clamp(0.0, 100.0);
-        metrics.satisfaction = metrics.satisfaction.clamp(0.0, 100.0);
-        metrics.security = metrics.security.clamp(0.0, 100.0);
+        metrics.science = metrics.science.clamp(0.0, 100.0);
+        metrics.culture = metrics.culture.clamp(0.0, 100.0);
+        metrics.diplomacy = metrics.diplomacy.clamp(0.0, 100.0);
+        metrics.religion = metrics.religion.clamp(0.0, 100.0);
         metrics.military = metrics.military.clamp(0.0, 100.0);
     }
 }

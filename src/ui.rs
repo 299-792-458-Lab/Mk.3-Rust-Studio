@@ -185,18 +185,22 @@ fn render_world_state_panel(frame: &mut Frame, area: Rect, snapshot: &ObserverSn
                     Style::default().fg(Color::Red).italic(),
                 )));
             } else {
-                nation_lines.push(Line::from(Span::styled("  Economy", Style::default())));
+                nation_lines.push(Line::from(Span::styled("  경제 (Economy)", Style::default())));
                 nation_lines.push(create_bar(metrics.economy, 100.0, 10, nation_color));
-                nation_lines.push(Line::from(Span::styled("  Satisfaction", Style::default())));
-                nation_lines.push(create_bar(metrics.satisfaction, 100.0, 10, nation_color));
-                nation_lines.push(Line::from(Span::styled("  Security", Style::default())));
-                nation_lines.push(create_bar(metrics.security, 100.0, 10, nation_color));
-                nation_lines.push(Line::from(Span::styled("  Military", Style::default())));
+                nation_lines.push(Line::from(Span::styled("  과학 (Science)", Style::default())));
+                nation_lines.push(create_bar(metrics.science, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  문화 (Culture)", Style::default())));
+                nation_lines.push(create_bar(metrics.culture, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  외교 (Diplomacy)", Style::default())));
+                nation_lines.push(create_bar(metrics.diplomacy, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  종교 (Religion)", Style::default())));
+                nation_lines.push(create_bar(metrics.religion, 100.0, 10, nation_color));
+                nation_lines.push(Line::from(Span::styled("  군사 (Military)", Style::default())));
                 nation_lines.push(create_bar(metrics.military, 100.0, 10, nation_color));
-                nation_lines.push(Line::from(Span::styled("  Territory", Style::default())));
+                nation_lines.push(Line::from(Span::styled("  영토 (Territory)", Style::default())));
                 nation_lines.push(create_bar(metrics.territory, 100.0, 10, nation_color));
             }
-            let nation_paragraph = Paragraph::new(nation_lines);
+            let nation_paragraph = Paragraph::new(nation_lines).scroll((0, 0));
             frame.render_widget(nation_paragraph, nations_layout[i]);
         }
     }
@@ -245,7 +249,7 @@ impl<'a> Widget for MapWidget<'a> {
             // Twinkling effect for combat zones
             if self.snapshot.combat_hexes.contains(&coord) {
                 if self.snapshot.tick % 2 == 0 {
-                    color = Color::Yellow; // Bright color for twinkling
+                    color = Color::White; // Bright color for twinkling
                 }
             }
 
