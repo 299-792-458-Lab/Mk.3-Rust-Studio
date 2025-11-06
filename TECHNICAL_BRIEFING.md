@@ -1,4 +1,4 @@
-Project: Mk.3-Rust-Studio  
+Project: Mk.03-Rust-Studio  
 World Name: TERA  
 Document Type: Technical Briefing & Detailed Specification  
 Version: 1.0  
@@ -9,7 +9,7 @@ Date: 2025-10-13
 
 ## 1. Project Overview
 
-Mk.3-Rust-Studio is an autonomous backend simulation engine built entirely in Rust, designed to emulate a living, evolving world named TERA. It operates without direct user control—instead, the system runs a persistent, event-driven world where hundreds of AI entities interact dynamically through exploration, trade, combat, and survival.
+Mk.03-Rust-Studio is an autonomous backend simulation engine built entirely in Rust, designed to emulate a living, evolving world named TERA. It operates without direct user control—instead, the system runs a persistent, event-driven world where hundreds of AI entities interact dynamically through exploration, trade, combat, and survival.
 
 This project aims to demonstrate Rust’s strengths in memory safety, concurrency, and deterministic simulation within a self-regulating ecosystem architecture.
 
@@ -218,4 +218,4 @@ The simulation will encode these layers as structured metadata to drive systemic
 
 ## 13. Objectives and Impact
 
-Mk.3-Rust-Studio: TERA demonstrates autonomous system design, concurrency control, and emergent simulation using Rust. It bridges engineering precision with narrative generation, providing a dynamic proof of concept for self-regulating backend systems capable of producing a living data world.
+Mk.03-Rust-Studio: TERA demonstrates autonomous system design, concurrency control, and emergent simulation using Rust. It bridges engineering precision with narrative generation, providing a dynamic proof of concept for self-regulating backend systems capable of producing a living data world.

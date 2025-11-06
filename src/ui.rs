@@ -19,7 +19,7 @@ pub fn render(frame: &mut Frame, snapshot: &ObserverSnapshot, tick_duration: Dur
     frame.render_widget(
         Block::new()
             .borders(Borders::TOP)
-            .title(" Mk.3 Rust Studio - TERA "),
+            .title(" Mk.03 Rust Studio - TERA "),
         main_layout[0],
     );
 
